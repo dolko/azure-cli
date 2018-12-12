@@ -332,9 +332,6 @@ phases:
 
       filePath: scripts/release/rpm/pipeline.sh
 
-  env:
-    DISTRO: xenial
-    DISTRO_BASE_IMAGE: ubuntu:xenial
 
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Artifact: yum'
@@ -399,9 +396,6 @@ phases:
 
       filePath: scripts/release/debian/pipeline.sh
 
-  env:
-    DISTRO: xenial
-    DISTRO_BASE_IMAGE: ubuntu:xenial
 
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Artifact: debian'
@@ -431,10 +425,6 @@ phases:
 
       filePath: scripts/release/debian/pipeline.sh
 
-  env:
-    DISTRO: artful
-    DISTRO_BASE_IMAGE: ubuntu:artful
-
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Artifact: debian'
     inputs:
@@ -463,9 +453,6 @@ phases:
 
       filePath: scripts/release/debian/pipeline.sh
 
-  env:
-    DISTRO: trusty
-    DISTRO_BASE_IMAGE: ubuntu:trusty
 
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Artifact: debian'
@@ -495,9 +482,6 @@ phases:
 
       filePath: scripts/release/debian/pipeline.sh
 
-  env:
-    DISTRO: bionic
-    DISTRO_BASE_IMAGE: ubuntu:bionic
 
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Artifact: debian'
@@ -527,9 +511,6 @@ phases:
 
       filePath: scripts/release/debian/pipeline.sh
 
-  env:
-    DISTRO: wheezy
-    DISTRO_BASE_IMAGE: debian:wheezy
 
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Artifact: debian'
@@ -559,10 +540,6 @@ phases:
 
       filePath: scripts/release/debian/pipeline.sh
 
-  env:
-    DISTRO: jessie
-    DISTRO_BASE_IMAGE: debian:jessie
-
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Artifact: debian'
     inputs:
@@ -590,10 +567,6 @@ phases:
       targetType: ./
 
       filePath: scripts/release/debian/pipeline.sh
-
-  env:
-    DISTRO: stretch
-    DISTRO_BASE_IMAGE: debian:stretch
 
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Artifact: debian'
@@ -754,10 +727,6 @@ phases:
       targetType: ./
 
       filePath: scripts/release/debian/pipeline.sh
-
-  env:
-    DISTRO: cosmic
-    DISTRO_BASE_IMAGE: ubuntu:cosmic
 
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Artifact: debian'
