@@ -240,9 +240,6 @@ phases:
        curl -sfS -I $HOMEBREW_UPSTREAM_URL >/dev/null
        echo -n $HOMEBREW_UPSTREAM_URL > $BUILD_STAGINGDIRECTORY/github/upstream_url
     displayName: 'Upload Azure CLI Release Candidate Source For Homebrew'
-  env:
-    AZURE_STORAGE_KEY: "{insert storage key here}"
-    AZURE_STORAGE_ACCOUNT: "{insert storage account name here}"
 
   - bash: |
        #!/bin/bash
