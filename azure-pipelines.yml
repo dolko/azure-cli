@@ -638,72 +638,72 @@ phases:
     displayName: 'Bash Script'
 
 
-- phase: Phase_12
-  displayName: Publish Artifacts to Azure Storage
-
-  dependsOn:
-   - Phase_16
-   - Phase_15
-   - Phase_17
-   - Phase_18
-   - Phase_19
-   - Phase_11
-  condition: succeeded()
-  queue:
-    name: Hosted
-    demands: azureps
-
-  steps:
-  - task: DownloadBuildArtifacts@0
-    displayName: 'Download Metadata Artifacts'
-    inputs:
-      artifactName: metadata
-
-
-  - task: DownloadBuildArtifacts@0
-    displayName: 'Download PyPI Build Artifacts'
-    inputs:
-      artifactName: pypi
-
-
-  - task: DownloadBuildArtifacts@0
-    displayName: 'Download MSI Build Artifacts'
-    inputs:
-      artifactName: MSI
-
-
-  - task: DownloadBuildArtifacts@0
-    displayName: 'Download Debian Build Artifacts'
-    inputs:
-      artifactName: debian
-
-
-  - task: DownloadBuildArtifacts@0
-    displayName: 'Download RPM Build Artifacts'
-    inputs:
-      artifactName: yum
-
-
-  - task: DownloadBuildArtifacts@0
-    displayName: 'Download Docker Build Artifacts'
-    inputs:
-      artifactName: Docker
-
-
-  - task: AzureFileCopy@1
-    displayName: 'AzureBlob File Copy'
-    inputs:
-      SourcePath: '$(System.ArtifactsDirectory)'
-
-      azureSubscription: 'Azure SDK Infrastructure (6b085460-5f21-477e-ba44-1035046e9101)'
-
-      Destination: AzureBlob
-
-      storage: azureclistage
-
-      ContainerName: archive
-
-      BlobPrefix: '$(Build.BuildNumber)'
+#- phase: Phase_12
+#  displayName: Publish Artifacts to Azure Storage
+#
+#  dependsOn:
+#   - Phase_16
+#   - Phase_15
+#   - Phase_17
+#   - Phase_18
+#   - Phase_19
+#   - Phase_11
+#  condition: succeeded()
+#  queue:
+#    name: Hosted
+#    demands: azureps
+#
+#  steps:
+#  - task: DownloadBuildArtifacts@0
+#    displayName: 'Download Metadata Artifacts'
+#    inputs:
+#      artifactName: metadata
+#
+#
+#  - task: DownloadBuildArtifacts@0
+#    displayName: 'Download PyPI Build Artifacts'
+#    inputs:
+#      artifactName: pypi
+#
+#
+#  - task: DownloadBuildArtifacts@0
+#    displayName: 'Download MSI Build Artifacts'
+#    inputs:
+#      artifactName: MSI
+#
+#
+#  - task: DownloadBuildArtifacts@0
+#    displayName: 'Download Debian Build Artifacts'
+#    inputs:
+#      artifactName: debian
+#
+#
+#  - task: DownloadBuildArtifacts@0
+#    displayName: 'Download RPM Build Artifacts'
+#    inputs:
+#      artifactName: yum
+#
+#
+#  - task: DownloadBuildArtifacts@0
+#    displayName: 'Download Docker Build Artifacts'
+#    inputs:
+#      artifactName: Docker
+#
+#
+#  - task: AzureFileCopy@1
+#    displayName: 'AzureBlob File Copy'
+#    inputs:
+#      SourcePath: '$(System.ArtifactsDirectory)'
+#
+#      azureSubscription: 'Azure SDK Infrastructure (6b085460-5f21-477e-ba44-1035046e9101)'
+#
+#      Destination: AzureBlob
+#
+#      storage: azureclistage
+#
+#      ContainerName: archive
+#
+#      BlobPrefix: '$(Build.BuildNumber)'
 
 
 
