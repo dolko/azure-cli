@@ -97,7 +97,7 @@ phases:
 
 
   - bash: |
-       set -ex
+       set -exv
 
        CLI_VERSION=`cat $SYSTEM_ARTIFACTSDIRECTORY/metadata/version`
        IMAGE_NAME=clibuild$BUILD_BUILDNUMBER:latest
@@ -604,7 +604,7 @@ phases:
 
 
   - bash: |
-       set -ex
+       set -exv
 
        CLI_VERSION=`cat $SYSTEM_ARTIFACTSDIRECTORY/metadata/version`
 
