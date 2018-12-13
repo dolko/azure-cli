@@ -213,12 +213,13 @@ phases:
   - task: AzureFileCopy@1
     displayName: 'Upload Azure CLI Release Candidate Source For Homebrew'
     inputs:
-      SourcePath: '$(System.ArtifactsDirectory)'
-      azureSubscription: 'Azure SDK Infrastructure (6b085460-5f21-477e-ba44-1035046e9101)'
-      Destination: AzureBlob
+      sourcePath: '$(System.ArtifactsDirectory)'
+      azureConnectionType: 'ConnectedServiceNameARM'
+      azureSubscription: 'SDKInfrastructureSP'
+      destination: AzureBlob
       storage: azureclistage
-      ContainerName: archive-devops
-      BlobPrefix: '$(Build.BuildNumber)'
+      containerName: archive-devops
+      blobPrefix: '$(Build.BuildNumber)'
 
   - bash: |
        #!/bin/bash
@@ -684,17 +685,13 @@ phases:
   - task: AzureFileCopy@1
     displayName: 'AzureBlob File Copy'
     inputs:
-      SourcePath: '$(System.ArtifactsDirectory)'
-
-      azureSubscription: 'Azure SDK Infrastructure (6b085460-5f21-477e-ba44-1035046e9101)'
-
-      Destination: AzureBlob
-
+      sourcePath: '$(System.ArtifactsDirectory)'
+      azureConnectionType: 'ConnectedServiceNameARM'
+      azureSubscription: 'SDKInfrastructureSP'
+      destination: AzureBlob
       storage: azureclistage
-
-      ContainerName: archive-devops
-
-      BlobPrefix: '$(Build.BuildNumber)'
+      containerName: archive-devops
+      blobPrefix: '$(Build.BuildNumber)'
 
 
 
