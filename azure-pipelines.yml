@@ -210,16 +210,16 @@ phases:
     inputs:
       artifactName: pypi
 
-  - task: AzureFileCopy@1
-    displayName: 'Upload Azure CLI Release Candidate Source For Homebrew'
-    inputs:
-      sourcePath: '$(System.ArtifactsDirectory)'
-      azureConnectionType: 'ConnectedServiceNameARM'
-      azureSubscription: 'SDKInfrastructureSP'
-      destination: AzureBlob
-      storage: azureclistage
-      containerName: archive-devops
-      blobPrefix: '$(Build.BuildNumber)'
+#  - task: AzureFileCopy@1
+#    displayName: 'Upload Azure CLI Release Candidate Source For Homebrew'
+#    inputs:
+#      sourcePath: '$(System.ArtifactsDirectory)'
+#      azureConnectionType: 'ConnectedServiceNameARM'
+#      azureSubscription: 'SDKInfrastructureSP'
+#      destination: AzureBlob
+#      storage: azureclistage
+#      containerName: archive-devops
+#      blobPrefix: '$(Build.BuildNumber)'
 
   - bash: |
        #!/bin/bash
