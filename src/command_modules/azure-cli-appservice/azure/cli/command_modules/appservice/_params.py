@@ -376,3 +376,53 @@ def load_arguments(self, _):
         c.argument('name', arg_type=name_arg_type)
     with self.argument_context('functionapp config appsettings') as c:
         c.argument('slot_settings', nargs='+', help="space-separated slot app settings in a format of <name>=<value>")
+
+    with self.argument_context('functionapp devops-build create') as c:
+        c.argument('functionapp_name', options_list=['--functionapp_name', '-fn'], help="name of the functionapp that you want to use")
+        c.argument('organization_name', options_list=['--organization_name', '-on'], help="name of the Azure DevOps organization that you want to use")
+        c.argument('project_name', options_list=['--project_name', '-pn'], help="name of the Azure DevOps project that you want to use")
+
+    with self.argument_context('functionapp devops-build organization create') as c:
+        c.argument('name', arg_type=name_arg_type, help="name of the devops organization you want to create")
+        c.argument('region_code', help="the region of the devops organization you want to create")
+
+    with self.argument_context('functionapp devops-build project') as c:
+        c.argument('organization_name', help="name of the devops organization that holds the project you are trying to manage")
+
+    with self.argument_context('functionapp devops-build project create') as c:
+        c.argument('name', arg_type=name_arg_type, help="name of the devops project you want to create")
+
+    with self.argument_context('functionapp devops-build yaml create') as c:
+        c.argument('language', help="the language of your functionapp that you are using", choices=['python', 'java', 'node', 'net'])
+        c.argument('appType', help="the type of functionapp that you are using")
+        
+    with self.argument_context('functionapp devops-build respository') as c:
+        c.argument('organization_name', help="name of the devops organization that holds the project you are trying to use")
+        c.argument('project_name', help="name of the devops project that holds the repository")
+
+    with self.argument_context('functionapp devops-build respository create') as c:
+        c.argument('name', arg_type=name_arg_type, help="name of the devops repository you want to create")
+
+    with self.argument_context('functionapp devops-build respository setup-locally') as c:
+        c.argument('name', arg_type=name_arg_type, help="name of the devops repository you want to setup locally")
+
+    with self.argument_context('functionapp devops-build pool') as c:
+        c.argument('organization_name', help="name of the devops organization that holds the project you are trying to use")
+        c.argument('project_name', help="name of the devops project that has the pool")
+
+    with self.argument_context('functionapp devops-build service-principal-endpoint') as c:
+        c.argument('organization_name', help="name of the devops organization that holds the project you are trying to use")
+        c.argument('project_name', help="name of the devops project that has the endpoints")
+
+    with self.argument_context('functionapp devops-build service-principal-endpoint create') as c:
+        c.argument('name', arg_type=name_arg_type, help="name of the service principal endpoint you want to make")
+
+    with self.argument_context('functionapp devops-build extension') as c:
+        c.argument('organization_name', help="name of the devops organization that you want to install the extension to/list extensions of")
+
+    with self.argument_context('functionapp devops-build extension create') as c:
+        c.argument('extension_name', arg_type=name_arg_type, help="name of the extension you want to install")
+        c.argument('publisher_name', arg_type=name_arg_type, help="name of the publisher who made the extension you want to install")
+
+
+    

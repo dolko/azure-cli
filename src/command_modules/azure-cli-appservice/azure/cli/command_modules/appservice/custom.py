@@ -46,7 +46,9 @@ from azure.cli.core.util import in_cloud_console, shell_safe_json_parse, open_pa
 
 from .tunnel import TunnelServer
 
+from azure.cli.core._profile import Profile
 from .vsts_cd_provider import VstsContinuousDeliveryProvider
+from .azure_devops_build_provider import AzureDevopsBuildProvider
 from ._params import AUTH_TYPES, MULTI_CONTAINER_TYPES, LINUX_RUNTIMES, WINDOWS_RUNTIMES
 from ._client_factory import web_client_factory, ex_handler_factory
 from ._appservice_utils import _generic_site_operation
@@ -1884,6 +1886,7 @@ def create_function(cmd, resource_group_name, name, storage_account, plan=None,
                     deployment_source_branch='master', deployment_local_git=None,
                     deployment_container_image_name=None, tags=None):
     # pylint: disable=too-many-statements, too-many-branches
+
     if deployment_source_url and deployment_local_git:
         raise CLIError('usage error: --deployment-source-url <url> | --deployment-local-git')
     if bool(plan) == bool(consumption_plan_location):
@@ -2272,7 +2275,6 @@ def create_deploy_webapp(cmd, name, location=None, sku=None, dryrun=False):  # p
     logger.warning("All done.")
     return create_json
 
-
 def _ping_scm_site(cmd, resource_group, name):
     #  wakeup kudu, by making an SCM call
     import requests
@@ -2283,99 +2285,8 @@ def _ping_scm_site(cmd, resource_group, name):
     authorization = urllib3.util.make_headers(basic_auth='{}:{}'.format(user_name, password))
     requests.get(scm_url + '/api/settings', headers=authorization)
 
+def create_devops_build(cmd, functionapp_name=None, organization_name=None, project_name=None):
+    from .azure_devops_build_iteractive import AzureDevopsBuildInteractive
+    azure_devops_build_interactive = AzureDevopsBuildInteractive(cmd, logger, functionapp_name, organization_name, project_name)
+    azure_devops_build_interactive.interactive_azure_devops_build()
 
-def is_webapp_up(tunnel_server):
-    return tunnel_server.is_webapp_up()
-
-
-def create_tunnel_and_session(cmd, resource_group_name, name, port=None, slot=None):
-    webapp = show_webapp(cmd, resource_group_name, name, slot)
-    is_linux = webapp.reserved
-    if not is_linux:
-        raise CLIError("Only Linux App Service Plans supported, Found a Windows App Service Plan")
-
-    profiles = list_publish_profiles(cmd, resource_group_name, name, slot)
-    profile_user_name = next(p['userName'] for p in profiles)
-    profile_user_password = next(p['userPWD'] for p in profiles)
-
-    ssh_user_name = 'root'
-    ssh_user_password = 'Docker!'
-
-    if port is None:
-        port = 0  # Will auto-select a free port from 1024-65535
-        logger.info('No port defined, creating on random free port')
-    host_name = name
-
-    if slot is not None:
-        host_name += "-" + slot
-
-    tunnel_server = TunnelServer('', port, host_name, profile_user_name, profile_user_password)
-    _ping_scm_site(cmd, resource_group_name, name)
-
-    _wait_for_webapp(tunnel_server)
-
-    t = threading.Thread(target=_start_tunnel, args=(tunnel_server,))
-    t.daemon = True
-    t.start()
-
-    s = threading.Thread(target=_start_ssh_session,
-                         args=('localhost', tunnel_server.get_port(), ssh_user_name, ssh_user_password))
-    s.daemon = True
-    s.start()
-
-    while s.isAlive() and t.isAlive():
-        time.sleep(5)
-
-
-def _wait_for_webapp(tunnel_server):
-    tries = 0
-    while True:
-        if is_webapp_up(tunnel_server):
-            break
-        if tries == 0:
-            logger.warning('Connection is not ready yet, please wait')
-        if tries == 60:
-            raise CLIError("Timeout Error, Unable to establish a connection")
-        tries = tries + 1
-        logger.warning('.')
-        time.sleep(1)
-
-
-def _start_tunnel(tunnel_server):
-    tunnel_server.start_server()
-
-
-def _start_ssh_session(hostname, port, username, password):
-    tries = 0
-    while True:
-        try:
-            c = Connection(host=hostname,
-                           port=port,
-                           user=username,
-                           # connect_timeout=60*10,
-                           connect_kwargs={"password": password})
-            break
-        except Exception as ex:  # pylint: disable=broad-except
-            logger.info(ex)
-            if tries == 0:
-                logger.warning('Connection is not ready yet, please wait')
-            if tries == 60:
-                raise CLIError("Timeout Error, Unable to establish a connection")
-            tries = tries + 1
-            logger.warning('.')
-            time.sleep(1)
-    try:
-        c.run('cat /etc/motd', pty=True)
-        c.run('source /etc/profile; /bin/ash', pty=True)
-    except Exception as ex:  # pylint: disable=broad-except
-        logger.info(ex)
-    finally:
-        c.close()
-
-
-def ssh_webapp(cmd, resource_group_name, name, slot=None):  # pylint: disable=too-many-statements
-    import platform
-    if platform.system() == "Windows":
-        raise CLIError('webapp ssh is only supported on linux and mac')
-    else:
-        create_tunnel_and_session(cmd, resource_group_name, name, port=None, slot=slot)
