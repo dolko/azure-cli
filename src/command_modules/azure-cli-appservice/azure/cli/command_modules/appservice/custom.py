@@ -45,7 +45,9 @@ from azure.cli.core.util import open_page_in_browser
 
 from .tunnel import TunnelServer
 
+from azure.cli.core._profile import Profile
 from .vsts_cd_provider import VstsContinuousDeliveryProvider
+from .azure_devops_build_provider import AzureDevopsBuildProvider
 from ._params import AUTH_TYPES, MULTI_CONTAINER_TYPES, LINUX_RUNTIMES, WINDOWS_RUNTIMES
 from ._client_factory import web_client_factory, ex_handler_factory
 from ._appservice_utils import _generic_site_operation
@@ -1853,6 +1855,7 @@ def create_function(cmd, resource_group_name, name, storage_account, plan=None,
                     deployment_source_branch='master', deployment_local_git=None,
                     deployment_container_image_name=None, tags=None):
     # pylint: disable=too-many-statements, too-many-branches
+
     if deployment_source_url and deployment_local_git:
         raise CLIError('usage error: --deployment-source-url <url> | --deployment-local-git')
     if bool(plan) == bool(consumption_plan_location):
@@ -2241,7 +2244,6 @@ def create_deploy_webapp(cmd, name, location=None, sku=None, dryrun=False):  # p
     logger.warning("All done.")
     return create_json
 
-
 def _ping_scm_site(cmd, resource_group, name):
     #  wakeup kudu, by making an SCM call
     import requests
@@ -2252,6 +2254,7 @@ def _ping_scm_site(cmd, resource_group, name):
     authorization = urllib3.util.make_headers(basic_auth='{}:{}'.format(user_name, password))
     requests.get(scm_url + '/api/settings', headers=authorization)
 
+<<<<<<< HEAD
 
 def _check_for_ready_tunnel(tunnel_server):
     return tunnel_server.is_port_set_to_default()
@@ -2324,3 +2327,9 @@ def ssh_webapp(cmd, resource_group_name, name, slot=None):  # pylint: disable=to
         raise CLIError('webapp ssh is only supported on linux and mac')
     else:
         create_tunnel(cmd, resource_group_name, name, port=None, slot=slot)
+=======
+def create_devops_build(cmd, functionapp_name=None, organization_name=None, project_name=None):
+    from .azure_devops_build_iteractive import AzureDevopsBuildInteractive
+    azure_devops_build_interactive = AzureDevopsBuildInteractive(cmd, logger, functionapp_name, organization_name, project_name)
+    azure_devops_build_interactive.interactive_azure_devops_build()
+>>>>>>> adding functionapp devops-build create

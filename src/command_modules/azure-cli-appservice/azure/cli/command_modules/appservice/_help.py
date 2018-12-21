@@ -1026,3 +1026,169 @@ helps['functionapp cors show'] = """
     type: command
     short-summary: show allowed origins
 """
+
+helps['functionapp devops-build'] = """
+    type: group
+    short-summary: Integrate functionapps with Azure DevOps build pipeline
+"""
+
+
+helps['functionapp devops-build create'] = """
+    type: command
+    short-summary: Create an Azure Devops build pipeline for a function app.
+"""
+
+helps['functionapp devops-build organization'] = """
+    type: group
+    short-summary: Manage an Azure DevOps organization
+"""
+
+helps['functionapp devops-build organization list'] = """
+    type: command
+    short-summary: List Azure DevOps organizations
+"""
+
+helps['functionapp devops-build organization create'] = """
+    type: command
+    short-summary: Create Azure DevOps organization
+"""
+
+helps['functionapp devops-build organization regions'] = """
+    type: command
+    short-summary: List the regions for Azure DevOps Organizations
+"""
+
+helps['functionapp devops-build project'] = """
+    type: group
+    short-summary: Manage an Azure DevOps project
+"""
+
+helps['functionapp devops-build project list'] = """
+    type: command
+    short-summary: List Azure DevOps projects
+"""
+
+helps['functionapp devops-build project create'] = """
+    type: command
+    short-summary: Create an Azure DevOps project
+"""
+
+helps['functionapp devops-build yaml'] = """
+    type: group
+    short-summary: Manage the yaml file needed in order to build your azure devops deployment
+"""
+
+helps['functionapp devops-build yaml create'] = """
+    type: command
+    short-summary: Create an azure-devops yaml file
+"""
+
+helps['functionapp devops-build repository'] = """
+    type: group
+    short-summary: Manage the repository that your devops-build uses
+"""
+
+helps['functionapp devops-build repository create'] = """
+    type: command
+    short-summary: Create an azure-devops repository
+"""
+
+helps['functionapp devops-build repository list'] = """
+    type: command
+    short-summary: List your azure-devops repositories in the project
+"""
+
+helps['functionapp devops-build repository github-auth'] = """
+    type: command
+    short-summary: Setup your AzureDevops auth for your github account
+"""
+
+helps['functionapp devops-build repository github-auth'] = """
+    type: command
+    short-summary: List the github accounts that your azure devops has access to
+"""
+
+helps['functionapp devops-build repository setup-locally'] = """
+    type: command
+    short-summary: Setup your azure devops repository locally
+"""
+
+helps['functionapp devops-build service-principal-endpoint'] = """
+    type: group
+    short-summary: Manage the service principal endpoint that your devops-build uses to connect to your azure resources
+"""
+
+helps['functionapp devops-build service-principal-endpoint create'] = """
+    type: command
+    short-summary: Setup the service principal endpoint
+"""
+
+helps['functionapp devops-build service-principal-endpoint list'] = """
+    type: command
+    short-summary: List the service principal endpoints
+"""
+
+helps['functionapp devops-build extensions'] = """
+    type: group
+    short-summary: Manage your devops extensions
+"""
+
+helps['functionapp devops-build extensions create'] = """
+    type: command
+    short-summary: Create an extension for your devops organization
+"""
+
+helps['functionapp devops-build extensions list'] = """
+    type: command
+    short-summary: List the extensions for your devops organization
+"""
+
+helps['functionapp devops-build build-definition'] = """
+    type: group
+    short-summary: Manage your Azure Devops build definitions for azure functions
+"""
+
+helps['functionapp devops-build build-definition create'] = """
+    type: command
+    short-summary: Create an Azure Devops build definition for azure functions using your current yaml file
+"""
+
+helps['functionapp devops-build build-object'] = """
+    type: group
+    short-summary: Manage your Azure Devops build objects
+"""
+
+helps['functionapp devops-build build-object create'] = """
+    type: command
+    short-summary: Create an Azure Devops build object by executing the build definition
+"""
+
+helps['functionapp devops-build build-artifact'] = """
+    type: group
+    short-summary: Manage your Azure Devops build artifacts
+"""
+
+helps['functionapp devops-build build-artifact list'] = """
+    type: command
+    short-summary: List the build artifacts for a given build object
+"""
+
+helps['functionapp devops-build release-definition'] = """
+    type: group
+    short-summary: Manage your Azure Devops release definitions
+"""
+
+helps['functionapp devops-build release-definition create'] = """
+    type: command
+    short-summary: Create an Azure Devops release definition
+"""
+
+helps['functionapp devops-build release-object'] = """
+    type: group
+    short-summary: Manage your Azure Devops release object
+"""
+
+helps['functionapp devops-build release-object create'] = """
+    type: command
+    short-summary: Create an Azure Devops release object by running the release definition
+"""
