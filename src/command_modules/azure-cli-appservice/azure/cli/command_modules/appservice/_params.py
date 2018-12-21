@@ -369,3 +369,7 @@ def load_arguments(self, _):
         c.argument('name', arg_type=name_arg_type)
     with self.argument_context('functionapp config appsettings') as c:
         c.argument('slot_settings', nargs='+', help="space-separated slot app settings in a format of <name>=<value>")
+
+    with self.argument_context('functionapp devops-build organization create') as c:
+        c.argument('name', arg_type=name_arg_type, help="name of the devops organization you want to create")
+        c.argument('regionCode', help="the region of the devops organization you want to create")

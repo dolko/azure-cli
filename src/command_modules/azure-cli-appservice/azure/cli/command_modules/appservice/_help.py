@@ -1019,3 +1019,28 @@ helps['functionapp cors show'] = """
     type: command
     short-summary: show allowed origins
 """
+
+helps['functionapp devops-build'] = """
+    type: group
+    short-summary: Integrate functionapps with Azure DevOps build pipeline
+"""
+
+helps['functionapp devops-build organization'] = """
+    type: group
+    short-summary: Manage an Azure DevOps organization
+"""
+
+helps['functionapp devops-build organization list'] = """
+    type: command
+    short-summary: List Azure DevOps organizations
+"""
+
+helps['functionapp devops-build organization create'] = """
+    type: command
+    short-summary: Create Azure DevOps organization
+"""
+
+helps['functionapp devops-build organization regions'] = """
+    type: command
+    short-summary: List the regions for Azure DevOps Organizations
+"""

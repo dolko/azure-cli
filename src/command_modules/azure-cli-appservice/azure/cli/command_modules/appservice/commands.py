@@ -264,3 +264,8 @@ def load_command_table(self, _):
         g.custom_command('add', 'add_cors')
         g.custom_command('remove', 'remove_cors')
         g.custom_command('show', 'show_cors')
+
+    with self.command_group('functionapp devops-build organization') as g:
+        g.custom_command('list', 'list_devops_organizations')
+        g.custom_command('create', 'create_devops_organization')
+        g.custom_command('regions', 'list_devops_organizations_regions')
