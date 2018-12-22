@@ -2247,3 +2247,7 @@ def create_devops_organization(cmd, name, regionCode):
 def list_devops_organizations_regions(cmd):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
     return azure_devops_build_provider.list_regions()
+
+def list_devops_projects(cmd, organization_name):
+    azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx, organization_name)
+    return azure_devops_build_provider.list_projects()

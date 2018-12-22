@@ -373,3 +373,6 @@ def load_arguments(self, _):
     with self.argument_context('functionapp devops-build organization create') as c:
         c.argument('name', arg_type=name_arg_type, help="name of the devops organization you want to create")
         c.argument('regionCode', help="the region of the devops organization you want to create")
+
+    with self.argument_context('functionapp devops-build project') as c:
+        c.argument('organizationName', help="name of the devops organization that holds the project you are trying to manage")

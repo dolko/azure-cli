@@ -1044,3 +1044,13 @@ helps['functionapp devops-build organization regions'] = """
     type: command
     short-summary: List the regions for Azure DevOps Organizations
 """
+
+helps['functionapp devops-build project'] = """
+    type: group
+    short-summary: Manage an Azure DevOps project
+"""
+
+helps['functionapp devops-build project list'] = """
+    type: command
+    short-summary: List Azure DevOps projects
+"""

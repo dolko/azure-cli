@@ -11,14 +11,15 @@ from msrest import Configuration
 
 from azure_devops_build_manager.organization.organization_manager import OrganizationManager
 from azure_devops_build_manager.user.user_manager import UserManager
-
+from azure_devops_build_manager.project.project_manager import ProjectManager
 
 class AzureDevopsBuildProvider(object):
-    def __init__(self, cli_ctx):
+    def __init__(self, cli_ctx, organization_name=""):
         profile = Profile(cli_ctx=cli_ctx)
         creds, _, _ = profile.get_login_credentials(subscription_id=None)
         self.organization_manager = OrganizationManager(creds=creds)
         self.user_manager = UserManager(creds=creds)
+        self.project_manager = ProjectManager(organization_name=organization_name, creds=creds)
         self._progress_last_message = ''
 
     def list_organizations(self):
@@ -29,6 +30,10 @@ class AzureDevopsBuildProvider(object):
     def list_regions(self):
         regions = self.organization_manager.get_regions()
         return regions
+
+    def list_projects(self):
+        projects = self.project_manager.get_existing_projects()
+        return projects
 
     def create_organization(self, name, regionCode):
         # validate the organization name

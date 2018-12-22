@@ -31,6 +31,7 @@ CLASSIFIERS = [
 
 DEPENDENCIES = [
     'azure-cli-core',
+    'azure-devops-build-manager',
     'azure-mgmt-web==0.40.0',
     'azure-mgmt-storage==3.1.0',
     'azure-mgmt-containerregistry==2.4.0',
@@ -40,7 +41,6 @@ DEPENDENCIES = [
     'pyOpenSSL',
     'six',
     'vsts-cd-manager<1.1.0',
-    'azure-devops-build-manager',
 ]
 
 with open('README.rst', 'r', encoding='utf-8') as f:
