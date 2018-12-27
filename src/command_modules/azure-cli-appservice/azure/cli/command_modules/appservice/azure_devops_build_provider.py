@@ -12,32 +12,31 @@ from msrest import Configuration
 from azure_devops_build_manager.organization.organization_manager import OrganizationManager
 from azure_devops_build_manager.user.user_manager import UserManager
 from azure_devops_build_manager.project.project_manager import ProjectManager
+from azure_devops_build_manager.yaml.yaml_manager import YamlManager
+from azure_devops_build_manager.respository.repository_manager import RepositoryManager
+from azure_devops_build_manager.pool.pool_manager import PoolManager
 
 class AzureDevopsBuildProvider(object):
-    def __init__(self, cli_ctx, organization_name=""):
+    def __init__(self, cli_ctx):
         profile = Profile(cli_ctx=cli_ctx)
-        creds, _, _ = profile.get_login_credentials(subscription_id=None)
-        self.organization_manager = OrganizationManager(creds=creds)
-        self.user_manager = UserManager(creds=creds)
-        self.project_manager = ProjectManager(organization_name=organization_name, creds=creds)
-        self._progress_last_message = ''
+        self._creds, _, _ = profile.get_login_credentials(subscription_id=None)
 
     def list_organizations(self):
-        userid = self.user_manager.get_user_id()
-        organizations = self.organization_manager.get_organizations(userid.id)
+        organization_manager = OrganizationManager(creds=self._creds)
+        user_manager = UserManager(creds=self._creds)
+        userid = user_manager.get_user_id()
+        organizations = organization_manager.get_organizations(userid.id)
         return organizations
 
     def list_regions(self):
-        regions = self.organization_manager.get_regions()
+        organization_manager = OrganizationManager(creds=self._creds)
+        regions = organization_manager.get_regions()
         return regions
 
-    def list_projects(self):
-        projects = self.project_manager.get_existing_projects()
-        return projects
-
-    def create_organization(self, name, regionCode):
+    def create_organization(self, organization_name, regionCode):
         # validate the organization name
-        validation = self.organization_manager.validate_organization_name(name)
+        organization_manager = OrganizationManager(creds=self._creds)
+        validation = organization_manager.validate_organization_name(organization_name)
         if not validation.valid:
             return validation
 
@@ -48,9 +47,41 @@ class AzureDevopsBuildProvider(object):
                 valid_region = True
         if not valid_region:
             error_message = {}
-            error_message['message'] = "not a valid region code - run az functionapp devops-build organization regions to find a valid regionCode"
+            error_message['message'] = "not a valid region code - run 'az functionapp devops-build organization' regions to find a valid regionCode"
             error_message['valid'] = False
             return error_message
 
-        new_organization = self.organization_manager.create_organization(regionCode, name)
+        new_organization = organization_manager.create_organization(regionCode, organization_name)
         return new_organization
+
+    def list_projects(self, organization_name):
+        project_manager = ProjectManager(organization_name=organization_name, creds=self._creds)
+        projects = project_manager.get_existing_projects()
+        return projects
+
+    def create_project(self, organization_name, project_name):
+        project_manager = ProjectManager(organization_name=organization_name, creds=self._creds)
+        project = project_manager.create_project(project_name)
+        return project
+
+    def create_yaml(self, language):
+        yaml_manager = YamlManager(language)
+        yaml_manager.create_yaml()
+
+    def create_repository(self, organization_name, project_name, repository_name):
+        repository_manager = RepositoryManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
+        return repository_manager.create_repository(repository_name)
+
+    def list_repositories(self, organization_name, project_name):
+        repository_manager = RepositoryManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
+        return repository_manager.list_repositories()
+
+    def setup_repository(self, organization_name, project_name, repository_name):
+        repository_manager = RepositoryManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
+        return repository_manager.setup_repository(repository_name)
+
+    def list_pools(self, organization_name, project_name):
+        pool_manager = PoolManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
+        return pool_manager.get_pools()
+
+    

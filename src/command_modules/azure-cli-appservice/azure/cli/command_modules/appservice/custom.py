@@ -2249,5 +2249,29 @@ def list_devops_organizations_regions(cmd):
     return azure_devops_build_provider.list_regions()
 
 def list_devops_projects(cmd, organization_name):
-    azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx, organization_name)
-    return azure_devops_build_provider.list_projects()
+    azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
+    return azure_devops_build_provider.list_projects(organization_name)
+
+def create_devops_project(cmd, organization_name, project_name):
+    azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
+    return azure_devops_build_provider.create_project(organization_name=organization_name, project_name=project_name)
+
+def create_yaml_file(cmd, language):
+    azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
+    return azure_devops_build_provider.create_yaml(language=language)
+
+def list_devops_repositories(cmd, organization_name, project_name):
+    azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
+    return azure_devops_build_provider.list_repositories(organization_name=organization_name, project_name=project_name)
+
+def create_devops_repository(cmd, organization_name, project_name, repository_name):
+    azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
+    return azure_devops_build_provider.create_repository(organization_name=organization_name, project_name=project_name, repository_name=repository_name)
+
+def setup_devops_repository_locally(cmd, organization_name, project_name, repository_name):
+    azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
+    return azure_devops_build_provider.setup_repository(organization_name=organization_name, project_name=project_name, repository_name=repository_name)
+
+def list_pools(cmd, organization_name, project_name):
+    azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
+    return azure_devops_build_provider.list_pools(organization_name, project_name)

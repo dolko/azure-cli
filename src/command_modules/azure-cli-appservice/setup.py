@@ -37,6 +37,7 @@ DEPENDENCIES = [
     'azure-mgmt-containerregistry==2.4.0',
     # v1.17 breaks on wildcard cert https://github.com/shazow/urllib3/issues/981
     'urllib3[secure]>=1.18',
+    'vsts',
     'xmltodict',
     'pyOpenSSL',
     'six',

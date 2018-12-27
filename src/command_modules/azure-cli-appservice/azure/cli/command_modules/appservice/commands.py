@@ -272,3 +272,15 @@ def load_command_table(self, _):
 
     with self.command_group('functionapp devops-build project') as g:
         g.custom_command('list', 'list_devops_projects')
+        g.custom_command('create', 'create_devops_project')
+
+    with self.command_group('functionapp devops-build yaml') as g:
+        g.custom_command('create', 'create_yaml_file')
+
+    with self.command_group('functionapp devops-build repository') as g:
+        g.custom_command('list', 'list_devops_repositories')
+        g.custom_command('create', 'create_devops_repository')
+        g.custom_command('setup-locally', 'setup_devops_repository_locally')
+    
+    with self.command_group('functionapp devops-build pool') as g:
+        g.custom_command('list', 'list_pools')

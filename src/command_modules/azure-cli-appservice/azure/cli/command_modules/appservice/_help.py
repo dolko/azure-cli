@@ -1054,3 +1054,38 @@ helps['functionapp devops-build project list'] = """
     type: command
     short-summary: List Azure DevOps projects
 """
+
+helps['functionapp devops-build project create'] = """
+    type: command
+    short-summary: Create an Azure DevOps project
+"""
+
+helps['functionapp devops-build yaml'] = """
+    type: group
+    short-summary: Manage the yaml file needed in order to build your azure devops deployment
+"""
+
+helps['functionapp devops-build yaml create'] = """
+    type: command
+    short-summary: Create an azure-devops yaml file
+"""
+
+helps['functionapp devops-build repository'] = """
+    type: group
+    short-summary: Manage the repository that your devops-build uses
+"""
+
+helps['functionapp devops-build repository create'] = """
+    type: command
+    short-summary: Create an azure-devops repository
+"""
+
+helps['functionapp devops-build repository list'] = """
+    type: command
+    short-summary: List your azure-devops repositories in the project
+"""
+
+helps['functionapp devops-build repository setup-locally'] = """
+    type: command
+    short-summary: Setup your azure devops repository locally
+"""

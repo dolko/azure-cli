@@ -372,7 +372,27 @@ def load_arguments(self, _):
 
     with self.argument_context('functionapp devops-build organization create') as c:
         c.argument('name', arg_type=name_arg_type, help="name of the devops organization you want to create")
-        c.argument('regionCode', help="the region of the devops organization you want to create")
+        c.argument('region_code', help="the region of the devops organization you want to create")
 
     with self.argument_context('functionapp devops-build project') as c:
-        c.argument('organizationName', help="name of the devops organization that holds the project you are trying to manage")
+        c.argument('organization_name', help="name of the devops organization that holds the project you are trying to manage")
+
+    with self.argument_context('functionapp devops-build project create') as c:
+        c.argument('name', arg_type=name_arg_type, help="name of the devops project you want to create")
+
+    with self.argument_context('functionapp devops-build yaml create') as c:
+        c.argument('language', help="the language of your functionapp that you are creating", choices=['python', 'java', 'node', 'csharp'])
+
+    with self.argument_context('functionapp devops-build respository') as c:
+        c.argument('organization_name', help="name of the devops organization that holds the project you are trying to manage")
+        c.argument('project_name', help="name of the devops project that holds the repository")
+
+    with self.argument_context('functionapp devops-build respository create') as c:
+        c.argument('name', arg_type=name_arg_type, help="name of the devops repository you want to create")
+
+    with self.argument_context('functionapp devops-build respository setup-locally') as c:
+        c.argument('name', arg_type=name_arg_type, help="name of the devops repository you want to setup locally")
+
+    with self.argument_context('functionapp devops-build pool') as c:
+        c.argument('organization_name', help="name of the devops organization that holds the project you are trying to manage")
+        c.argument('project_name', help="name of the devops project that holds the repository")
