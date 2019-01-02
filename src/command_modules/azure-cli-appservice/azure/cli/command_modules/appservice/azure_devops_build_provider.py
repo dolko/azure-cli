@@ -15,6 +15,8 @@ from azure_devops_build_manager.project.project_manager import ProjectManager
 from azure_devops_build_manager.yaml.yaml_manager import YamlManager
 from azure_devops_build_manager.respository.repository_manager import RepositoryManager
 from azure_devops_build_manager.pool.pool_manager import PoolManager
+from azure_devops_build_manager.service_endpoint.service_endpoint_manager import ServiceEndpointManager
+from azure_devops_build_manager.extension.extension_manager import ExtensionManager
 
 class AzureDevopsBuildProvider(object):
     def __init__(self, cli_ctx):
@@ -64,9 +66,9 @@ class AzureDevopsBuildProvider(object):
         project = project_manager.create_project(project_name)
         return project
 
-    def create_yaml(self, language):
-        yaml_manager = YamlManager(language)
-        yaml_manager.create_yaml()
+    def create_yaml(self, language, appType, functionapp_name, subscription_name, storage_name):
+        yaml_manager = YamlManager(language, appType)
+        yaml_manager.create_yaml(functionapp_name, subscription_name, storage_name)
 
     def create_repository(self, organization_name, project_name, repository_name):
         repository_manager = RepositoryManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
@@ -84,4 +86,16 @@ class AzureDevopsBuildProvider(object):
         pool_manager = PoolManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
         return pool_manager.get_pools()
 
+    def create_service_endpoint(self, organization_name, project_name, name):
+        service_endpoint_manager = ServiceEndpointManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
+        return service_endpoint_manager.create_service_endpoint(name)
     
+    def list_service_endpoints(self, organization_name, project_name):
+        print("unimplemented")
+
+    def create_extension(self, organization_name, extension_name, publisher_name):
+        extension_manager = ExtensionManager(organization_name=organization_name)
+        return extension_manager.create_extension(extension_name, publisher_name)
+
+    def list_extensions(self, organization_name):
+        print("unimplemented")

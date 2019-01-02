@@ -265,6 +265,9 @@ def load_command_table(self, _):
         g.custom_command('remove', 'remove_cors')
         g.custom_command('show', 'show_cors')
 
+    with self.command_group('functionapp devops-build') as g:
+        g.custom_command('create', 'create_devops_build')
+
     with self.command_group('functionapp devops-build organization') as g:
         g.custom_command('list', 'list_devops_organizations')
         g.custom_command('create', 'create_devops_organization')
@@ -284,3 +287,11 @@ def load_command_table(self, _):
     
     with self.command_group('functionapp devops-build pool') as g:
         g.custom_command('list', 'list_pools')
+
+    with self.command_group('functionapp devops-build service-principal-endpoint') as g:
+        g.custom_command('list', 'list_service_principal_endpoints')
+        g.custom_command('create', 'create_service_principal_endpoint')
+
+    with self.command_group('functionapp devops-build extension') as g:
+        g.custom_command('list', 'list_extensions')
+        g.custom_command('create', 'create_extension')

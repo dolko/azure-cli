@@ -1025,6 +1025,12 @@ helps['functionapp devops-build'] = """
     short-summary: Integrate functionapps with Azure DevOps build pipeline
 """
 
+
+helps['functionapp devops-build create'] = """
+    type: command
+    short-summary: Create an Azure Devops build pipeline for a function app.
+"""
+
 helps['functionapp devops-build organization'] = """
     type: group
     short-summary: Manage an Azure DevOps organization
@@ -1088,4 +1094,34 @@ helps['functionapp devops-build repository list'] = """
 helps['functionapp devops-build repository setup-locally'] = """
     type: command
     short-summary: Setup your azure devops repository locally
+"""
+
+helps['functionapp devops-build service-principal-endpoint'] = """
+    type: group
+    short-summary: Manage the service principal endpoint that your devops-build uses to connect to your azure resources
+"""
+
+helps['functionapp devops-build service-principal-endpoint create'] = """
+    type: command
+    short-summary: Setup the service principal endpoint
+"""
+
+helps['functionapp devops-build service-principal-endpoint list'] = """
+    type: command
+    short-summary: List the service principal endpoints
+"""
+
+helps['functionapp devops-build extensions'] = """
+    type: group
+    short-summary: Manage your devops extensions
+"""
+
+helps['functionapp devops-build extensions create'] = """
+    type: command
+    short-summary: Create an extension for your devops organization
+"""
+
+helps['functionapp devops-build extensions list'] = """
+    type: command
+    short-summary: List the extensions for your devops organization
 """

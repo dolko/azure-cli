@@ -16,9 +16,10 @@ from os import urandom
 import json
 import ssl
 import sys
+import os
 import OpenSSL.crypto
 
-from knack.prompting import prompt_pass, NoTTYException
+from knack.prompting import prompt_pass, NoTTYException, prompt_choice_list, prompt_y_n, prompt
 from knack.util import CLIError
 from knack.log import get_logger
 
@@ -2256,9 +2257,9 @@ def create_devops_project(cmd, organization_name, project_name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
     return azure_devops_build_provider.create_project(organization_name=organization_name, project_name=project_name)
 
-def create_yaml_file(cmd, language):
+def create_yaml_file(cmd, language, appType, functionapp_name, subscription_name, storage_name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
-    return azure_devops_build_provider.create_yaml(language=language)
+    return azure_devops_build_provider.create_yaml(language, appType, functionapp_name, subscription_name, storage_name)
 
 def list_devops_repositories(cmd, organization_name, project_name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
@@ -2275,3 +2276,187 @@ def setup_devops_repository_locally(cmd, organization_name, project_name, reposi
 def list_pools(cmd, organization_name, project_name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
     return azure_devops_build_provider.list_pools(organization_name, project_name)
+
+def list_service_principal_endpoints(cmd, organization_name, project_name):
+    azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
+    return azure_devops_build_provider.list_service_endpoints(organization_name, project_name)
+
+def create_service_principal_endpoint(cmd, organization_name, project_name, name):
+    azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
+    return azure_devops_build_provider.create_service_endpoint(organization_name, project_name, name)
+
+def list_extensions(cmd, organization_name):
+    azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
+    return azure_devops_build_provider.list_extensions(organization_name)
+
+def create_extension(cmd, organization_name, extension_name, publisher_name):
+    azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
+    return azure_devops_build_provider.create_extension(organization_name, extension_name, publisher_name)
+
+
+#TODO make the build connection
+
+#TODO make the artifact connection
+
+#TODO make the release connection
+
+#TODO make the interactive prompt
+
+
+def create_devops_build(cmd, functionapp_name=None, organization_name=None, project_name=None): #TODO make completers
+    LINUX_CONSUMPTION = 0
+    LINUX_DEDICATED = 1
+    WINDOWS = 2
+
+
+    if functionapp_name is None:
+        functionapps = list_function_app(cmd)
+        functionapp_names = [functionapp.name for functionapp in functionapps]
+        functionapp_names = sorted(functionapp_names)
+        choice_index = prompt_choice_list('Please choose the functionapp: ', functionapp_names)
+        functionapp = [functionapp for functionapp in functionapps if functionapp.name == functionapp_names[choice_index]][0]
+        functionapp_name = functionapp.name
+    else:
+        functionapps = list_function_app(cmd)
+        functionapp_match = \
+            [functionapp for functionapp in functionapps if functionapp.name == functionapp_name]
+
+        if len(functionapp_match) != 1:
+            print("Error finding functionapp. Please check that the functionapp exists using 'az functionapp list'")
+            exit(1)
+        else:
+            functionapp = functionapp_match[0]
+
+    functionapp_details = show_webapp(cmd, functionapp.resource_group, functionapp.name)
+    kinds = functionapp_details.kind.split(',')
+
+    if 'linux' in kinds:
+        if 'container' in kinds:
+            functionapp_type = LINUX_DEDICATED
+        else:
+            functionapp_type = LINUX_CONSUMPTION
+    else:
+        functionapp_type = WINDOWS
+
+    app_settings = get_app_settings(cmd, functionapp.resource_group, functionapp.name)
+
+    for app_setting in app_settings:
+        if app_setting['name'] == "FUNCTIONS_WORKER_RUNTIME":
+            language = app_setting['value']
+        if app_setting['name'] == "AzureWebJobsStorage":
+            storage_name = app_setting['value'].split(';')[1].split('=')[1]
+
+    if organization_name is None:
+        response = prompt_y_n('Would you like to use an existing organization? ')
+
+        if response:
+            #find exisitng organizations
+            organizations = list_devops_organizations(cmd)
+            organization_names = [organization.accountName for organization in organizations.value]
+            organization_names = sorted(organization_names)
+            choice_index = prompt_choice_list('Please choose the organization: ', organization_names)
+            organization = [organization for organization in organizations.value if organization.accountName == organization_names[choice_index]][0]
+            organization_name = organization.accountName
+        else:
+            print("Creating a new organization")
+            # create a new organization
+            regions = list_devops_organizations_regions(cmd)
+            region_names = [region.display_name for region in regions.value]
+            region_names = sorted(region_names)
+            choice_index = prompt_choice_list('Please select a region for the new organization: ', region_names)
+            region = [region for region in regions.value if region.display_name == region_names[choice_index]][0]
+
+            while(True):
+                organization_name = prompt("Please enter the name of the new organization: ")
+                validation = create_devops_organization(cmd, organization_name, region.regionCode)
+                if hasattr(validation, 'valid'):
+                    if validation.valid is False:
+                        print(validation.message)
+                        print("Note: any name must be globally unique")
+                    else:
+                        break
+                else:
+                    break
+
+            organization_name = validation.name
+    else:
+        organizations = list_devops_organizations(cmd)
+        organization_match = \
+            [organization for organization in organizations.value if organization.accountName == organization_name]
+
+        if len(organization_match) != 1:
+            print("Error finding organization. Please check that the organization exists using 'functionapp devops-build organization list'")
+            exit(1)
+        else:
+            organization = organization_match[0]
+        
+
+    if project_name is None:
+        response = prompt_y_n('Would you like to use an existing project? ')
+        still_continue = False
+        if response:
+            projects = list_devops_projects(cmd, organization_name)
+            if projects.count > 0:
+                project_names = [project.name for project in projects.value]
+                project_names = sorted(project_names)
+                choice_index = prompt_choice_list('Please select a region for the new organization: ', project_names)
+                project = [project for project in projects.value if project.name == project_names[choice_index]][0]
+            else:
+                print("There are no exisiting projects in this organization")
+                still_continue = prompt_y_n('Would you like to create a project instead? ')
+
+        if (not response) or (still_continue):
+            project_name = prompt("Please enter the name of the new project: ")
+            project = create_devops_project(cmd, organization_name, project_name)
+
+    else:
+        #validate that the project exists
+        projects = list_devops_projects(cmd, organization_name)
+        project_match = \
+            [project for project in projects.value if project.name == project_name]
+
+        if len(project_match) != 1:
+            print("Error finding project. Please check that the project exists using 'functionapp devops-build project list'")
+            exit(1)
+        else:
+            project = project_match[0]
+
+    # rn the objects we have are:
+    # project  - organization - functionapp + resource_group + storage + language + app type
+
+    repository_name = project_name
+    service_endpoint_name = organization_name + project_name
+    build_definition_name = project_name
+
+    if os.path.exists('azure-pipelines.yml'):
+        response = prompt_y_n('There is already an azure pipelines yaml file. Do you want to delete it and create a new one? ')
+    if (not os.path.exists('azure-pipelines.yml')) or response:
+        create_yaml_file(cmd, language, functionapp_type, functionapp_name, service_endpoint_name, storage_name)
+
+    
+    # check if we need to make a repository
+    repositories = list_devops_repositories(cmd, organization_name, project_name)
+    repository_match = \
+        [repository for repository in repositories if repository.name == repository_name]
+
+    if len(repository_match) != 1:
+        create_devops_repository(cmd, organization_name, project_name, repository_name)
+    else:
+        repository = repository_match[0]
+
+    setup_devops_repository_locally(cmd, organization_name, project_name, repository_name)
+
+    
+    pools = list_pools(cmd, organization_name, project_name)
+
+    for pool in pools.value:
+        if (functionapp_type == WINDOWS) and pool.name == "Hosted VS2017":
+            pool_name = "Hosted VS2017"
+            pool_id = pool.id
+        elif ((functionapp_type == LINUX_CONSUMPTION) or (functionapp_type == LINUX_DEDICATED)) and pool.name == "Hosted Ubuntu 1604":
+            pool_name = "Hosted Ubuntu 1604"
+            pool_id = pool.id
+
+    
+    service_endpoints = list_service_principal_endpoints(cmd, organization_name, project_name)
+    print(service_endpoints)
