@@ -4,10 +4,7 @@
 # --------------------------------------------------------------------------------------------
 
 from __future__ import print_function
-from sys import stderr
 from azure.cli.core._profile import Profile
-from msrest.service_client import ServiceClient
-from msrest import Configuration
 
 from azure_devops_build_manager.organization.organization_manager import OrganizationManager
 from azure_devops_build_manager.user.user_manager import UserManager
@@ -17,6 +14,10 @@ from azure_devops_build_manager.respository.repository_manager import Repository
 from azure_devops_build_manager.pool.pool_manager import PoolManager
 from azure_devops_build_manager.service_endpoint.service_endpoint_manager import ServiceEndpointManager
 from azure_devops_build_manager.extension.extension_manager import ExtensionManager
+from azure_devops_build_manager.builder.builder_manager import BuilderManager
+from azure_devops_build_manager.artifact.artifact_manager import ArtifactManager
+from azure_devops_build_manager.release.release_manager import ReleaseManager
+# pylint: disable=line-too-long
 
 class AzureDevopsBuildProvider(object):
     def __init__(self, cli_ctx):
@@ -27,12 +28,12 @@ class AzureDevopsBuildProvider(object):
         organization_manager = OrganizationManager(creds=self._creds)
         user_manager = UserManager(creds=self._creds)
         userid = user_manager.get_user_id()
-        organizations = organization_manager.get_organizations(userid.id)
+        organizations = organization_manager.list_organizations(userid.id)
         return organizations
 
     def list_regions(self):
         organization_manager = OrganizationManager(creds=self._creds)
-        regions = organization_manager.get_regions()
+        regions = organization_manager.list_regions()
         return regions
 
     def create_organization(self, organization_name, regionCode):
@@ -58,7 +59,7 @@ class AzureDevopsBuildProvider(object):
 
     def list_projects(self, organization_name):
         project_manager = ProjectManager(organization_name=organization_name, creds=self._creds)
-        projects = project_manager.get_existing_projects()
+        projects = project_manager.list_projects()
         return projects
 
     def create_project(self, organization_name, project_name):
@@ -84,18 +85,59 @@ class AzureDevopsBuildProvider(object):
 
     def list_pools(self, organization_name, project_name):
         pool_manager = PoolManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
-        return pool_manager.get_pools()
+        return pool_manager.list_pools()
 
     def create_service_endpoint(self, organization_name, project_name, name):
         service_endpoint_manager = ServiceEndpointManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
         return service_endpoint_manager.create_service_endpoint(name)
-    
+
     def list_service_endpoints(self, organization_name, project_name):
-        print("unimplemented")
+        service_endpoint_manager = ServiceEndpointManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
+        return service_endpoint_manager.list_service_endpoints()
 
     def create_extension(self, organization_name, extension_name, publisher_name):
-        extension_manager = ExtensionManager(organization_name=organization_name)
+        extension_manager = ExtensionManager(organization_name=organization_name, creds=self._creds)
         return extension_manager.create_extension(extension_name, publisher_name)
 
     def list_extensions(self, organization_name):
-        print("unimplemented")
+        extension_manager = ExtensionManager(organization_name=organization_name, creds=self._creds)
+        return extension_manager.list_extensions()
+
+    def create_build_definition(self, organization_name, project_name, repository_name, build_definition_name, pool_name):
+        builder_manager = BuilderManager(organization_name=organization_name, project_name=project_name, repository_name=repository_name, \
+                                             creds=self._creds)
+        return builder_manager.create_definition(build_definition_name=build_definition_name, pool_name=pool_name)
+
+    def list_build_definition(self, organization_name, project_name):
+        builder_manager = BuilderManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
+        return builder_manager.list_definitions()
+
+    def create_build_object(self, organization_name, project_name, build_definition_name, pool_name):
+        builder_manager = BuilderManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
+        return builder_manager.create_build(build_definition_name, pool_name)
+
+    def list_build_object(self, organization_name, project_name):
+        builder_manager = BuilderManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
+        return builder_manager.list_builds()
+
+    def list_artifacts(self, organization_name, project_name, build_id):
+        artifact_manager = ArtifactManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
+        return artifact_manager.list_artifacts(build_id)
+
+    def create_release_definition(self, organization_name, project_name, build_name, artifact_name, pool_name, service_endpoint_name,
+                                  release_definition_name, app_type, functionapp_name, storage_name, resource_name):
+        release_manager = ReleaseManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
+        return release_manager.create_release_definition(build_name, artifact_name, pool_name, service_endpoint_name, release_definition_name,
+                                                         app_type, functionapp_name, storage_name, resource_name)
+
+    def list_release_definitions(self, organization_name, project_name):
+        release_manager = ReleaseManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
+        return release_manager.list_release_definitions()
+
+    def create_release(self, organization_name, project_name, release_definition_name):
+        release_manager = ReleaseManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
+        return release_manager.create_release(release_definition_name)
+
+    def list_releases(self, organization_name, project_name):
+        release_manager = ReleaseManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
+        return release_manager.list_releases()

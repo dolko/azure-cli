@@ -1125,3 +1125,53 @@ helps['functionapp devops-build extensions list'] = """
     type: command
     short-summary: List the extensions for your devops organization
 """
+
+helps['functionapp devops-build build-definition'] = """
+    type: group
+    short-summary: Manage your Azure Devops build definitions for azure functions
+"""
+
+helps['functionapp devops-build build-definition create'] = """
+    type: command
+    short-summary: Create an Azure Devops build definition for azure functions using your current yaml file
+"""
+
+helps['functionapp devops-build build-object'] = """
+    type: group
+    short-summary: Manage your Azure Devops build objects
+"""
+
+helps['functionapp devops-build build-object create'] = """
+    type: command
+    short-summary: Create an Azure Devops build object by executing the build definition
+"""
+
+helps['functionapp devops-build build-artifact'] = """
+    type: group
+    short-summary: Manage your Azure Devops build artifacts
+"""
+
+helps['functionapp devops-build build-artifact list'] = """
+    type: command
+    short-summary: List the build artifacts for a given build object
+"""
+
+helps['functionapp devops-build release-definition'] = """
+    type: group
+    short-summary: Manage your Azure Devops release definitions
+"""
+
+helps['functionapp devops-build release-definition create'] = """
+    type: command
+    short-summary: Create an Azure Devops release definition
+"""
+
+helps['functionapp devops-build release-object'] = """
+    type: group
+    short-summary: Manage your Azure Devops release object
+"""
+
+helps['functionapp devops-build release-object create'] = """
+    type: command
+    short-summary: Create an Azure Devops release object by running the release definition
+"""

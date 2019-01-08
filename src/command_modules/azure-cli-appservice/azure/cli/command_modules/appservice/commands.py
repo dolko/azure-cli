@@ -295,3 +295,22 @@ def load_command_table(self, _):
     with self.command_group('functionapp devops-build extension') as g:
         g.custom_command('list', 'list_extensions')
         g.custom_command('create', 'create_extension')
+
+    with self.command_group('functionapp devops-build build-definition') as g:
+        g.custom_command('list', 'list_build_definitions')
+        g.custom_command('create', 'create_build_definition')
+
+    with self.command_group('functionapp devops-build build-object') as g:
+        g.custom_command('list', 'list_build_objects')
+        g.custom_command('create', 'create_build_object')
+
+    with self.command_group('functionapp devops-build build-artifact') as g:
+        g.custom_command('list', 'list_build_artifacts')
+
+    with self.command_group('functionapp devops-build release-definition') as g:
+        g.custom_command('list', 'list_release_definitions')
+        g.custom_command('create', 'create_release_definition')
+
+    with self.command_group('functionapp devops-build release-object') as g:
+        g.custom_command('list', 'list_release_objects')
+        g.custom_command('create', 'create_release_object')

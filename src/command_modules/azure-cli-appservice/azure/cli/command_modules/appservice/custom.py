@@ -15,7 +15,7 @@ from binascii import hexlify
 from os import urandom
 import json
 import ssl
-import sys
+import sys, time
 import os
 import OpenSSL.crypto
 
@@ -40,6 +40,7 @@ from azure.cli.core.commands import LongRunningOperation
 from azure.cli.core.util import in_cloud_console
 from azure.cli.core.util import open_page_in_browser
 from azure.cli.core._profile import Profile
+from azure_devops_build_manager.constants import (LINUX_CONSUMPTION, LINUX_DEDICATED, WINDOWS, PYTHON, NODE, NET, JAVA)
 from .vsts_cd_provider import VstsContinuousDeliveryProvider
 from .azure_devops_build_provider import AzureDevopsBuildProvider
 from ._params import AUTH_TYPES, MULTI_CONTAINER_TYPES, LINUX_RUNTIMES, WINDOWS_RUNTIMES
@@ -2275,60 +2276,88 @@ def setup_devops_repository_locally(cmd, organization_name, project_name, reposi
 
 def list_pools(cmd, organization_name, project_name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
-    return azure_devops_build_provider.list_pools(organization_name, project_name)
+    return azure_devops_build_provider.list_pools(organization_name=organization_name, project_name=project_name)
 
 def list_service_principal_endpoints(cmd, organization_name, project_name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
-    return azure_devops_build_provider.list_service_endpoints(organization_name, project_name)
+    return azure_devops_build_provider.list_service_endpoints(organization_name=organization_name, project_name=project_name)
 
 def create_service_principal_endpoint(cmd, organization_name, project_name, name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
-    return azure_devops_build_provider.create_service_endpoint(organization_name, project_name, name)
+    return azure_devops_build_provider.create_service_endpoint(organization_name=organization_name, project_name=project_name, name=name)
 
 def list_extensions(cmd, organization_name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
-    return azure_devops_build_provider.list_extensions(organization_name)
+    return azure_devops_build_provider.list_extensions(organization_name=organization_name)
 
 def create_extension(cmd, organization_name, extension_name, publisher_name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
-    return azure_devops_build_provider.create_extension(organization_name, extension_name, publisher_name)
+    return azure_devops_build_provider.create_extension(organization_name=organization_name, extension_name=extension_name, publisher_name=publisher_name)
 
+def list_build_definitions(cmd, organization_name, project_name):
+    azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
+    return azure_devops_build_provider.list_build_definition(organization_name, project_name)
 
-#TODO make the build connection
+def create_build_definition(cmd, organization_name, project_name, repository_name, build_definition_name, pool_name):
+    azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
+    return azure_devops_build_provider.create_build_definition(organization_name, project_name, repository_name, build_definition_name, pool_name)
 
-#TODO make the artifact connection
+def list_build_objects(cmd, organization_name, project_name):
+    azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
+    return azure_devops_build_provider.list_build_object(organization_name, project_name)
 
-#TODO make the release connection
+def create_build_object(cmd, organization_name, project_name, build_definition_name, pool_name):
+    azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
+    return azure_devops_build_provider.create_build_object(organization_name, project_name, build_definition_name, pool_name)
 
-#TODO make the interactive prompt
+def list_build_artifacts(cmd, organization_name, project_name, build_id):
+    azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
+    return azure_devops_build_provider.list_artifacts(organization_name, project_name, build_id)
 
+def list_release_definitions(cmd, organization_name, project_name):
+    azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
+    return azure_devops_build_provider.list_release_definitions(organization_name, project_name)
 
-def create_devops_build(cmd, functionapp_name=None, organization_name=None, project_name=None): #TODO make completers
-    LINUX_CONSUMPTION = 0
-    LINUX_DEDICATED = 1
-    WINDOWS = 2
+def create_release_definition(cmd, organization_name, project_name, build_name, artifact_name, pool_name, service_endpoint_name,
+                                  release_definition_name, app_type, functionapp_name, storage_name, resource_name):
+    azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
+    return azure_devops_build_provider.create_release_definition(organization_name, project_name, build_name, artifact_name, pool_name, service_endpoint_name,
+                                                                 release_definition_name, app_type, functionapp_name, storage_name, resource_name)
+
+def list_release_objects(cmd, organization_name, project_name):
+    azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
+    return azure_devops_build_provider.list_releases(organization_name, project_name)
+
+def create_release_object(cmd, organization_name, project_name, release_definition_name):
+    azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
+    return azure_devops_build_provider.create_release(organization_name, project_name, release_definition_name)
+
+def create_devops_build(cmd, functionapp_name=None, organization_name=None, project_name=None):
 
 
     if functionapp_name is None:
+        logger.info("Retrieving functionapp names ...")
         functionapps = list_function_app(cmd)
         functionapp_names = [functionapp.name for functionapp in functionapps]
         functionapp_names = sorted(functionapp_names)
         choice_index = prompt_choice_list('Please choose the functionapp: ', functionapp_names)
-        functionapp = [functionapp for functionapp in functionapps if functionapp.name == functionapp_names[choice_index]][0]
+        functionapp = [functionapp for functionapp in functionapps 
+                       if functionapp.name == functionapp_names[choice_index]] [0]
         functionapp_name = functionapp.name
     else:
         functionapps = list_function_app(cmd)
-        functionapp_match = \
-            [functionapp for functionapp in functionapps if functionapp.name == functionapp_name]
+        functionapp_match = [functionapp for functionapp in functionapps 
+                             if functionapp.name == functionapp_name]
 
         if len(functionapp_match) != 1:
-            print("Error finding functionapp. Please check that the functionapp exists using 'az functionapp list'")
+            logger.error("Error finding functionapp. Please check that the functionapp exists using 'az functionapp list'")
             exit(1)
         else:
             functionapp = functionapp_match[0]
 
     functionapp_details = show_webapp(cmd, functionapp.resource_group, functionapp.name)
     kinds = functionapp_details.kind.split(',')
+
 
     if 'linux' in kinds:
         if 'container' in kinds:
@@ -2342,10 +2371,23 @@ def create_devops_build(cmd, functionapp_name=None, organization_name=None, proj
 
     for app_setting in app_settings:
         if app_setting['name'] == "FUNCTIONS_WORKER_RUNTIME":
-            language = app_setting['value']
+            language_str = app_setting['value']
+            if language_str == "python":
+                language = PYTHON
+            elif language_str == "node":
+                language = NODE
+            elif language_str == "net":
+                language = NET
+            elif language_str == "java":
+                language = JAVA
+            else:
+                logger.warning("valid language not found")
+                language = ""
+
         if app_setting['name'] == "AzureWebJobsStorage":
             storage_name = app_setting['value'].split(';')[1].split('=')[1]
 
+    created_repository = False
     if organization_name is None:
         response = prompt_y_n('Would you like to use an existing organization? ')
 
@@ -2358,7 +2400,7 @@ def create_devops_build(cmd, functionapp_name=None, organization_name=None, proj
             organization = [organization for organization in organizations.value if organization.accountName == organization_names[choice_index]][0]
             organization_name = organization.accountName
         else:
-            print("Creating a new organization")
+            logger.info("Creating a new organization")
             # create a new organization
             regions = list_devops_organizations_regions(cmd)
             region_names = [region.display_name for region in regions.value]
@@ -2371,28 +2413,33 @@ def create_devops_build(cmd, functionapp_name=None, organization_name=None, proj
                 validation = create_devops_organization(cmd, organization_name, region.regionCode)
                 if hasattr(validation, 'valid'):
                     if validation.valid is False:
-                        print(validation.message)
-                        print("Note: any name must be globally unique")
+                        logger.warning(validation.message)
+                        logger.warning("Note: any name must be globally unique")
                     else:
                         break
                 else:
                     break
 
             organization_name = validation.name
+            created_repository = True
+            logger.info("Finished creating the new organization: ")
     else:
         organizations = list_devops_organizations(cmd)
         organization_match = \
             [organization for organization in organizations.value if organization.accountName == organization_name]
 
         if len(organization_match) != 1:
-            print("Error finding organization. Please check that the organization exists using 'functionapp devops-build organization list'")
+            logger.error("Error finding organization. Please check that the organization exists using 'functionapp devops-build organization list'")
             exit(1)
         else:
             organization = organization_match[0]
         
 
     if project_name is None:
-        response = prompt_y_n('Would you like to use an existing project? ')
+        if created_repository:
+            response = True
+        else:
+            response = prompt_y_n('Would you like to use an existing project? ')
         still_continue = False
         if response:
             projects = list_devops_projects(cmd, organization_name)
@@ -2401,13 +2448,24 @@ def create_devops_build(cmd, functionapp_name=None, organization_name=None, proj
                 project_names = sorted(project_names)
                 choice_index = prompt_choice_list('Please select a region for the new organization: ', project_names)
                 project = [project for project in projects.value if project.name == project_names[choice_index]][0]
+                project_name = project.name
+                # TODO if they select an already existing project we should check if the repository in the azure repos is empty
+                # Otherwise we will need to create a new azure repository in that project. Also check if they have an exisitng
+                # Repository that they might want to connect up
             else:
-                print("There are no exisiting projects in this organization")
+                logger.warning("There are no exisiting projects in this organization")
                 still_continue = prompt_y_n('Would you like to create a project instead? ')
+
+                if not still_continue:
+                    logger.error("you must either create or select a project")
+                    exit(1)
+            
 
         if (not response) or (still_continue):
             project_name = prompt("Please enter the name of the new project: ")
             project = create_devops_project(cmd, organization_name, project_name)
+            project_name = project.name
+
 
     else:
         #validate that the project exists
@@ -2416,7 +2474,7 @@ def create_devops_build(cmd, functionapp_name=None, organization_name=None, proj
             [project for project in projects.value if project.name == project_name]
 
         if len(project_match) != 1:
-            print("Error finding project. Please check that the project exists using 'functionapp devops-build project list'")
+            logger.error("Error finding project. Please check that the project exists using 'functionapp devops-build project list'")
             exit(1)
         else:
             project = project_match[0]
@@ -2444,19 +2502,65 @@ def create_devops_build(cmd, functionapp_name=None, organization_name=None, proj
     else:
         repository = repository_match[0]
 
-    setup_devops_repository_locally(cmd, organization_name, project_name, repository_name)
+    setup = setup_devops_repository_locally(cmd, organization_name, project_name, repository_name)
 
-    
+    if not setup.succeeded:
+        response = prompt_y_n('To continue we need to remove the current git file locally. Is this okay? ')
+        # need to remove the current git repository
+        if response:
+            # TODO consider the linux command for removing the file
+            os.system("rmdir /s /q .git")
+            # rerun the setup
+            setup_devops_repository_locally(cmd, organization_name, project_name, repository_name)
+        else:
+            exit(1)
+
     pools = list_pools(cmd, organization_name, project_name)
 
     for pool in pools.value:
-        if (functionapp_type == WINDOWS) and pool.name == "Hosted VS2017":
-            pool_name = "Hosted VS2017"
-            pool_id = pool.id
-        elif ((functionapp_type == LINUX_CONSUMPTION) or (functionapp_type == LINUX_DEDICATED)) and pool.name == "Hosted Ubuntu 1604":
-            pool_name = "Hosted Ubuntu 1604"
-            pool_id = pool.id
+        if (functionapp_type == WINDOWS) and pool.name == "Default":
+            pool_name = "Default"
+        elif ((functionapp_type == LINUX_CONSUMPTION) or (functionapp_type == LINUX_DEDICATED)) and pool.name == "Default":
+            pool_name = "Default"
 
-    
     service_endpoints = list_service_principal_endpoints(cmd, organization_name, project_name)
-    print(service_endpoints)
+    service_endpoint_match = \
+        [service_endpoint for service_endpoint in service_endpoints if service_endpoint.name == service_endpoint_name]
+
+    if len(service_endpoint_match) != 1:
+        create_service_principal_endpoint(cmd, organization_name, project_name, service_endpoint_name)
+    else:
+        service_endpoint = service_endpoint_match[0]
+
+    create_extension(cmd, organization_name, 'AzureAppServiceSetAppSettings', 'hboelman')
+    create_extension(cmd, organization_name, 'PascalNaber-Xpirit-CreateSasToken', 'pascalnaber')
+
+    # need to check if the build definition already exists
+    build_definitions = list_build_definitions(cmd, organization_name, project_name)
+    build_definition_match = \
+        [build_definition for build_definition in build_definitions if build_definition.name == build_definition_name]
+
+    if len(build_definition_match) != 1:
+        create_build_definition(cmd, organization_name, project_name, repository_name, build_definition_name, pool_name)
+   
+    logger.info("creating build definition")
+    build = create_build_object(cmd, organization_name, project_name, build_definition_name, pool_name)
+
+    # wait for artifacts / build to complete
+    artifacts = []
+    while artifacts == []:
+        time.sleep(1)
+        logger.info("waiting for artifacts ...")
+        artifacts = list_build_artifacts(cmd, organization_name, project_name, build.id)
+
+    # need to create a release pipelines that uses the artifacts from the build
+    artifact_name = "drop"
+    release_definition_name = build_definition_name + " release"
+    resource_name = functionapp.resource_group
+    # All of the releases use a windows vm to release
+    pool_name = "Hosted VS2017"
+    create_release_definition(cmd, organization_name, project_name, build_definition_name, artifact_name, pool_name,
+                              service_endpoint_name, release_definition_name, functionapp_type, functionapp_name, storage_name, resource_name)
+    create_release_object(cmd, organization_name, project_name, release_definition_name)
+
+    #TODO hit the endpoint so that the release starts
