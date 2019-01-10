@@ -217,9 +217,18 @@ class AzureDevopsBuildInteractive(object):
             repository = repository_match[0]
 
         #detect if they have a git file locally
+        resonse = False
         if os.path.exists(".git"):
             self.logger.warning("There is a local git file.")
-            response = prompt_y_n('Would you like to use the git file that you have locally repository? ')
+            response = prompt_y_n('Would you like to use the git repository that you are referencing locally? ')
+            
+            if response:
+                # get the user to select from types of supported repositories
+
+                # TODO for github : https://docs.microsoft.com/en-us/rest/api/azure/devops/build/source%20providers/list?view=azure-devops-rest-5.0
+                
+            else:
+
         else:
             print("yo")
         #yes
