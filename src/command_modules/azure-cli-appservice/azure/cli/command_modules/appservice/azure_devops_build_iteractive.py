@@ -4,7 +4,7 @@ from knack.prompting import prompt_choice_list, prompt_y_n, prompt
 from azure_devops_build_manager.constants import (LINUX_CONSUMPTION, LINUX_DEDICATED, WINDOWS, PYTHON, NODE, NET, JAVA)
 from .custom import list_function_app, list_devops_organizations, create_devops_project, list_devops_projects, create_yaml_file
 from .custom import show_webapp, get_app_settings, list_devops_organizations_regions, create_devops_organization, list_devops_repositories, create_devops_repository, setup_devops_repository_locally
-from .custom import list_service_principal_endpoints, create_service_principal_endpoint, create_extension
+from .custom import list_service_principal_endpoints, create_service_principal_endpoint, create_extension, list_commits
 from .custom import list_build_definitions, create_build_definition, create_build_object
 from .custom import list_build_artifacts, create_release_definition, create_release_object
 
@@ -31,12 +31,16 @@ class AzureDevopsBuildInteractive(object):
         organization, organization_name, created_organization = self._get_organization(self.cmd, organization_name)
         project = self._get_project(self.cmd, organization_name, created_organization, project_name)
 
+        
+
         # TODO repository name needs to change if the repository already exists + this will effect build definition name
         project_name = project.name
         repository_name = project_name
         service_endpoint_name = organization_name + project_name
         build_definition_name = project_name
         pool_name = "Default"
+
+
 
         if os.path.exists('azure-pipelines.yml'):
             response = prompt_y_n("There is already an azure pipelines yaml file. Do you want to delete it and create a new one? ")
@@ -50,15 +54,14 @@ class AzureDevopsBuildInteractive(object):
         self.logger.info("Installing the required extensions for the build and release")
         create_extension(self.cmd, organization_name, 'AzureAppServiceSetAppSettings', 'hboelman')
         create_extension(self.cmd, organization_name, 'PascalNaber-Xpirit-CreateSasToken', 'pascalnaber')
-        # TODO get the last extension that is needed for the enablement of a sas token
 
         self.logger.info("Initiating the build")
         build = self._get_build(organization_name, project_name, repository_name, build_definition_name, pool_name)
 
         self.logger.info("Initiating the release")
-        release = self._get_release(organization_name, project_name, build, build_definition_name, service_endpoint_name, functionapp, functionapp_type, functionapp_name, storage_name)
+        self._get_release(organization_name, project_name, build, build_definition_name, service_endpoint_name, functionapp, functionapp_type, functionapp_name, storage_name)
 
-        #TODO hit the endpoint so that the release starts
+        self.logger.info("Finished the release. Please follow it here: ")
 
     def _select_functionapp(self, cmd):
         self.logger.info("Retrieving functionapp names ...")
@@ -201,6 +204,51 @@ class AzureDevopsBuildInteractive(object):
         else:
             project = self.cmd_selector.cmd_project(organization_name, project_name)
         return project
+
+    def _get_repository_new(self, organization_name, project_name, repository_name):
+        # check if we need to make a repository
+        repositories = list_devops_repositories(self.cmd, organization_name, project_name)
+        repository_match = \
+            [repository for repository in repositories if repository.name == repository_name]
+
+        if len(repository_match) != 1:
+            repository = create_devops_repository(self.cmd, organization_name, project_name, repository_name)
+        else:
+            repository = repository_match[0]
+
+        #detect if they have a git file locally
+        if os.path.exists(".git"):
+            self.logger.warning("There is a local git file.")
+            response = prompt_y_n('Would you like to use the git file that you have locally repository? ')
+        else:
+            print("yo")
+        #yes
+        #want to use it?
+        #yes -> options on
+
+
+        setup = setup_devops_repository_locally(self.cmd, organization_name, project_name, repository_name)
+
+        if not setup.succeeded:
+            response = prompt_y_n('To continue we need to remove the current git file locally. Is this okay? ')
+            # need to remove the current git repository
+            if response:
+                # TODO consider the linux command for removing the file
+                os.system("rmdir /s /q .git")
+                setup_devops_repository_locally(self.cmd, organization_name, project_name, repository_name)
+            else:
+                exit(1)
+
+        return repository
+
+
+        commits = list_commits(self.cmd, organization_name, project_name, repository_name)
+        if not commits:
+            self.logger.info("the default repository is empty")
+        else:
+            self.logger.warning("the repository already contains a commit - you need to start a new repository")
+            response = prompt_y_n('ya dee ')
+
 
     def _get_repository(self, organization_name, project_name, repository_name):
         # check if we need to make a repository

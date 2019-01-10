@@ -2269,6 +2269,10 @@ def create_devops_repository(cmd, organization_name, project_name, repository_na
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
     return azure_devops_build_provider.create_repository(organization_name=organization_name, project_name=project_name, repository_name=repository_name)
 
+def list_commits(cmd, organization_name, project_name, repository_name):
+    azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
+    return azure_devops_build_provider.list_commits(organization_name=organization_name, project_name=project_name, repository_name=repository_name)
+
 def setup_devops_repository_locally(cmd, organization_name, project_name, repository_name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
     return azure_devops_build_provider.setup_repository(organization_name=organization_name, project_name=project_name, repository_name=repository_name)

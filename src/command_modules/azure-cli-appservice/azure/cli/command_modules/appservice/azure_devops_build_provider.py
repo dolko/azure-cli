@@ -79,6 +79,10 @@ class AzureDevopsBuildProvider(object):
         repository_manager = RepositoryManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
         return repository_manager.list_repositories()
 
+    def list_commits(self, organization_name, project_name, repository_name):
+        repository_manager = RepositoryManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
+        return repository_manager.list_commits(repository_name)
+
     def setup_repository(self, organization_name, project_name, repository_name):
         repository_manager = RepositoryManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
         return repository_manager.setup_repository(repository_name)
