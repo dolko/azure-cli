@@ -1091,6 +1091,16 @@ helps['functionapp devops-build repository list'] = """
     short-summary: List your azure-devops repositories in the project
 """
 
+helps['functionapp devops-build repository github-auth'] = """
+    type: command
+    short-summary: Setup your AzureDevops auth for your github account
+"""
+
+helps['functionapp devops-build repository github-auth'] = """
+    type: command
+    short-summary: List the github accounts that your azure devops has access to
+"""
+
 helps['functionapp devops-build repository setup-locally'] = """
     type: command
     short-summary: Setup your azure devops repository locally

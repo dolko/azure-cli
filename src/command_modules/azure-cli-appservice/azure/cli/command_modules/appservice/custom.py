@@ -15,8 +15,7 @@ from binascii import hexlify
 from os import urandom
 import json
 import ssl
-import sys, time
-import os
+import sys
 import OpenSSL.crypto
 
 from knack.prompting import prompt_pass, NoTTYException
@@ -2255,7 +2254,7 @@ def list_devops_projects(cmd, organization_name):
 
 def create_devops_project(cmd, organization_name, project_name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
-    return azure_devops_build_provider.create_project(organization_name=organization_name, project_name=project_name)
+    return azure_devops_build_provider.create_project(organization_name, project_name)
 
 def create_yaml_file(cmd, language, appType, functionapp_name, subscription_name, storage_name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
@@ -2263,39 +2262,47 @@ def create_yaml_file(cmd, language, appType, functionapp_name, subscription_name
 
 def list_devops_repositories(cmd, organization_name, project_name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
-    return azure_devops_build_provider.list_repositories(organization_name=organization_name, project_name=project_name)
+    return azure_devops_build_provider.list_repositories(organization_name, project_name)
 
 def create_devops_repository(cmd, organization_name, project_name, repository_name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
-    return azure_devops_build_provider.create_repository(organization_name=organization_name, project_name=project_name, repository_name=repository_name)
+    return azure_devops_build_provider.create_repository(organization_name, project_name, repository_name)
+
+def create_github_repository_auth(cmd, organization_name, project_name):
+    azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
+    return azure_devops_build_provider.create_github_repository_auth(organization_name, project_name)
+
+def list_github_repositories(cmd, organization_name, project_name):
+    azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
+    return azure_devops_build_provider.list_github_repositories(organization_name, project_name)
 
 def list_commits(cmd, organization_name, project_name, repository_name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
-    return azure_devops_build_provider.list_commits(organization_name=organization_name, project_name=project_name, repository_name=repository_name)
+    return azure_devops_build_provider.list_commits(organization_name, project_name, repository_name)
 
 def setup_devops_repository_locally(cmd, organization_name, project_name, repository_name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
-    return azure_devops_build_provider.setup_repository(organization_name=organization_name, project_name=project_name, repository_name=repository_name)
+    return azure_devops_build_provider.setup_repository(organization_name, project_name, repository_name)
 
 def list_pools(cmd, organization_name, project_name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
-    return azure_devops_build_provider.list_pools(organization_name=organization_name, project_name=project_name)
+    return azure_devops_build_provider.list_pools(organization_name, project_name)
 
 def list_service_principal_endpoints(cmd, organization_name, project_name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
-    return azure_devops_build_provider.list_service_endpoints(organization_name=organization_name, project_name=project_name)
+    return azure_devops_build_provider.list_service_endpoints(organization_name, project_name)
 
 def create_service_principal_endpoint(cmd, organization_name, project_name, name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
-    return azure_devops_build_provider.create_service_endpoint(organization_name=organization_name, project_name=project_name, name=name)
+    return azure_devops_build_provider.create_service_endpoint(organization_name, project_name, name)
 
 def list_extensions(cmd, organization_name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
-    return azure_devops_build_provider.list_extensions(organization_name=organization_name)
+    return azure_devops_build_provider.list_extensions(organization_name)
 
 def create_extension(cmd, organization_name, extension_name, publisher_name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
-    return azure_devops_build_provider.create_extension(organization_name=organization_name, extension_name=extension_name, publisher_name=publisher_name)
+    return azure_devops_build_provider.create_extension(organization_name, extension_name, publisher_name)
 
 def list_build_definitions(cmd, organization_name, project_name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
@@ -2303,7 +2310,8 @@ def list_build_definitions(cmd, organization_name, project_name):
 
 def create_build_definition(cmd, organization_name, project_name, repository_name, build_definition_name, pool_name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
-    return azure_devops_build_provider.create_build_definition(organization_name, project_name, repository_name, build_definition_name, pool_name)
+    return azure_devops_build_provider.create_build_definition(organization_name, project_name,
+                                                               repository_name, build_definition_name, pool_name)
 
 def list_build_objects(cmd, organization_name, project_name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
@@ -2311,7 +2319,8 @@ def list_build_objects(cmd, organization_name, project_name):
 
 def create_build_object(cmd, organization_name, project_name, build_definition_name, pool_name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
-    return azure_devops_build_provider.create_build_object(organization_name, project_name, build_definition_name, pool_name)
+    return azure_devops_build_provider.create_build_object(organization_name, project_name,
+                                                           build_definition_name, pool_name)
 
 def list_build_artifacts(cmd, organization_name, project_name, build_id):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
@@ -2321,11 +2330,14 @@ def list_release_definitions(cmd, organization_name, project_name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
     return azure_devops_build_provider.list_release_definitions(organization_name, project_name)
 
-def create_release_definition(cmd, organization_name, project_name, build_name, artifact_name, pool_name, service_endpoint_name,
-                                  release_definition_name, app_type, functionapp_name, storage_name, resource_name):
+def create_release_definition(cmd, organization_name, project_name, build_name, artifact_name, pool_name,
+                              service_endpoint_name, release_definition_name, app_type, functionapp_name,
+                              storage_name, resource_name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
-    return azure_devops_build_provider.create_release_definition(organization_name, project_name, build_name, artifact_name, pool_name, service_endpoint_name,
-                                                                 release_definition_name, app_type, functionapp_name, storage_name, resource_name)
+    return azure_devops_build_provider.create_release_definition(organization_name, project_name, build_name,
+                                                                 artifact_name, pool_name, service_endpoint_name,
+                                                                 release_definition_name, app_type, functionapp_name,
+                                                                 storage_name, resource_name)
 
 def list_release_objects(cmd, organization_name, project_name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
@@ -2337,5 +2349,5 @@ def create_release_object(cmd, organization_name, project_name, release_definiti
 
 def create_devops_build(cmd, functionapp_name=None, organization_name=None, project_name=None):
     from .azure_devops_build_iteractive import AzureDevopsBuildInteractive
-    azure_devops_build_interactive = AzureDevopsBuildInteractive(cmd, logger)
-    azure_devops_build_interactive.interactive_azure_devops_build(functionapp_name=functionapp_name, organization_name=organization_name, project_name=project_name)
+    azure_devops_build_interactive = AzureDevopsBuildInteractive(cmd, logger, functionapp_name, organization_name, project_name)
+    azure_devops_build_interactive.interactive_azure_devops_build()

@@ -55,6 +55,7 @@ class AzureDevopsBuildProvider(object):
             return error_message
 
         new_organization = organization_manager.create_organization(regionCode, organization_name)
+        new_organization.valid = True
         return new_organization
 
     def list_projects(self, organization_name):
@@ -69,7 +70,8 @@ class AzureDevopsBuildProvider(object):
 
     def create_yaml(self, language, appType, functionapp_name, subscription_name, storage_name):
         yaml_manager = YamlManager(language, appType)
-        yaml_manager.create_yaml(functionapp_name, subscription_name, storage_name)
+        # TODO when devops switch to all in one yaml file you will need to add an include release paramater and set it to true
+        yaml_manager.create_yaml(functionapp_name, subscription_name, storage_name, include_release=False)
 
     def create_repository(self, organization_name, project_name, repository_name):
         repository_manager = RepositoryManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
@@ -145,3 +147,11 @@ class AzureDevopsBuildProvider(object):
     def list_releases(self, organization_name, project_name):
         release_manager = ReleaseManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
         return release_manager.list_releases()
+
+    def create_github_repository_auth(self, organization_name, project_name):
+        repository_manager = RepositoryManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
+        return repository_manager.create_github_connection()
+
+    def list_github_repositories(self, organization_name, project_name):
+        repository_manager = RepositoryManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
+        return repository_manager.list_github_repositories()

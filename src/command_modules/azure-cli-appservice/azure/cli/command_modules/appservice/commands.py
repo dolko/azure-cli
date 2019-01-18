@@ -283,6 +283,8 @@ def load_command_table(self, _):
     with self.command_group('functionapp devops-build repository') as g:
         g.custom_command('list', 'list_devops_repositories')
         g.custom_command('create', 'create_devops_repository')
+        g.custom_command('github-auth', 'create_github_repository_auth')
+        g.custom_command('github-list', 'list_github_repositories')
         g.custom_command('setup-locally', 'setup_devops_repository_locally')
     
     with self.command_group('functionapp devops-build pool') as g:
