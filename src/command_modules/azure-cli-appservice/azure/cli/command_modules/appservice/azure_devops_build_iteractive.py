@@ -2,9 +2,11 @@ import os
 from subprocess import check_output
 import time
 import re
+import json
 from knack.prompting import prompt_choice_list, prompt_y_n, prompt
-from azure_devops_build_manager.constants import (LINUX_CONSUMPTION, LINUX_DEDICATED, WINDOWS, PYTHON, NODE, NET, JAVA)
+from azure_devops_build_manager.constants import (LINUX_CONSUMPTION, LINUX_DEDICATED, WINDOWS, PYTHON, NODE, DOTNET, JAVA)
 from .azure_devops_build_provider import AzureDevopsBuildProvider
+# from . import custom as c
 from .custom import list_function_app, list_devops_organizations, create_devops_project, list_devops_projects, create_yaml_file
 from .custom import show_webapp, get_app_settings, list_devops_organizations_regions, create_devops_organization, list_devops_repositories, create_devops_repository, setup_devops_repository_locally
 from .custom import list_service_principal_endpoints, create_service_principal_endpoint, create_extension, list_commits
@@ -33,10 +35,14 @@ class AzureDevopsBuildInteractive(object):
         self.repository_name = None
         self.service_endpoint_name = None
         self.build_definition_name = None
+        self.release_definition_name = None
         self.build_pool_name = "Default"
         self.release_pool_name = "Hosted VS2017"
         self.artifact_name = "drop"
 
+        self.settings = []
+        self.build = None
+        self.release = None
         # These are used to tell if we made new objects
         self.created_organization = False
         self.created_project = False
@@ -54,8 +60,8 @@ class AzureDevopsBuildInteractive(object):
         # Set up the default names for the rest of the things we need to create
         self.repository_name = self.project_name
         self.service_endpoint_name = self.organization_name + self.project_name
-        self.build_definition_name = self.project_name
-        self.release_definition_name = build_definition_name + " release"
+        self.build_definition_name = self.project_name + " INITIAL AZ CLI BUILD"
+        self.release_definition_name = self.project_name + " INITIAL AZ CLI RELEASE"
 
         self.process_yaml()
         self.process_repository()
@@ -81,6 +87,7 @@ class AzureDevopsBuildInteractive(object):
         self.resource_group_name = functionapp.resource_group
         self.functionapp_type = self._find_type(kinds)
         self.functionapp_language, self.storage_name = self._find_language_and_storage_name(app_settings)
+
 
     def process_organization(self):
         """Helper to retrieve information about an organization / create a new one"""
@@ -109,12 +116,27 @@ class AzureDevopsBuildInteractive(object):
             self.cmd_selector.cmd_project(self.organization_name, self.project_name)
 
     def process_yaml(self):
+        # Try and get what the app settings are
+        with open('local.settings.json') as f:
+            data = json.load(f)
+
+        default = ['FUNCTIONS_WORKER_RUNTIME', 'AzureWebJobsStorage']
+        settings = []
+        for key, value in data['Values'].items():
+            if key not in default:
+                settings.append((key, value))
+
+        if settings:
+            use_local_settings = prompt_y_n('Would you like to use your local settings on your host settings?')
+            if not use_local_settings:
+                settings = []
+
+        self.settings = settings
+
         if os.path.exists('azure-pipelines.yml'):
-            # TODO some check to see if their pipelines yaml is in the correct langauge
             response = prompt_y_n("There is already an azure pipelines yaml file. Do you want to delete it and create a new one? ")
         if (not os.path.exists('azure-pipelines.yml')) or response:
-            create_yaml_file(self.cmd, self.functionapp_language, self.functionapp_type, self.functionapp_name,
-                             self.service_endpoint_name, self.storage_name)
+            create_yaml_file(self.cmd, self.functionapp_language, self.functionapp_type)
 
     def process_repository(self):
         if os.path.exists(".git"):
@@ -130,7 +152,7 @@ class AzureDevopsBuildInteractive(object):
     def process_service_endpoint(self):
         service_endpoints = list_service_principal_endpoints(self.cmd, self.organization_name, self.project_name)
         service_endpoint_match = \
-            [service_endpoint for service_endpoint in service_endpoints 
+            [service_endpoint for service_endpoint in service_endpoints
              if service_endpoint.name == self.service_endpoint_name]
 
         if len(service_endpoint_match) != 1:
@@ -145,47 +167,54 @@ class AzureDevopsBuildInteractive(object):
         # need to check if the build definition already exists
         build_definitions = list_build_definitions(self.cmd, self.organization_name, self.project_name)
         build_definition_match = \
-            [build_definition for build_definition in build_definitions if build_definition.name == self.build_definition_name]
+            [build_definition for build_definition in build_definitions
+             if build_definition.name == self.build_definition_name]
 
         if len(build_definition_match) != 1:
-            create_build_definition(self.cmd, self.organization_name, self.project_name, 
+            create_build_definition(self.cmd, self.organization_name, self.project_name,
                                     self.repository_name, self.build_definition_name, self.build_pool_name)
-    
-        build = create_build_object(self.cmd, self.organization_name, self.project_name, self.build_definition_name, self.build_pool_name)
-        return build
+
+        build = create_build_object(self.cmd, self.organization_name, self.project_name,
+                                    self.build_definition_name, self.build_pool_name)
+
+        url = "https://dev.azure.com/" + self.organization_name + "/" + self.project_name + "/_build/results?buildId=" + str(build.id)
+        self.logger.info("To follow the build process go to %s", url)
+        self.build = build
 
     def process_release(self):
         # wait for artifacts / build to complete
         artifacts = []
+        counter = 0
         while artifacts == []:
             time.sleep(1.5)
-            self.logger.info("waiting for artifacts ...")
+            self.logger.info("waiting for artifacts ... %s", counter)
             build = self._get_build_by_id(self.organization_name, self.project_name, self.build.id)
             if build.status == 'completed':
                 break
             artifacts = list_build_artifacts(self.cmd, self.organization_name, self.project_name, self.build.id)
+            counter += 1
 
         if build.result == 'failed':
             url = "https://dev.azure.com/" + self.organization_name + "/" + self.project_name + "/_build/results?buildId=" + str(build.id)
             self.logger.critical("Your build has failed")
             self.logger.critical("To view details on why your build has failed please go to %s", url)
             exit(1)
-        
-        # create the release definition and release
 
         # TODO ensure that there are no clashes for the current combination of the release definition and the releases
         create_release_definition(self.cmd, self.organization_name, self.project_name,
                                   self.build_definition_name, self.artifact_name, self.release_pool_name,
                                   self.service_endpoint_name, self.release_definition_name, self.functionapp_type,
-                                  self.functionapp_name, self.storage_name, self.resource_group_name)
-        release = create_release_object(self.cmd, self.organization_name, self.project_name, self.release_definition_name)
-        return release
+                                  self.functionapp_name, self.storage_name, self.resource_group_name, self.settings)
+        release = create_release_object(self.cmd, self.organization_name, self.project_name,
+                                        self.release_definition_name)
+
+
+        url = "https://dev.azure.com/" + self.organization_name + "/" + self.project_name + "/_releaseProgress?_a=release-environment-logs&releaseId=" + str(release.id)
+        self.logger.info("To follow the release process go to %s", url)
+        self.release = release
 
     def find_type_repository(self):
-        import re
-        b = check_output('git init'.split())
-        with open('.git/config') as f:
-            lines = f.readlines
+        lines = (check_output('git remote show origin'.split())).decode('utf-8').split('\n')
         for line in lines:
             if re.search('github', line):
                 return 'github'
@@ -282,10 +311,12 @@ class AzureDevopsBuildInteractive(object):
             commits = list_commits(self.cmd, self.organization_name, self.project_name, self.repository_name)
             if commits:
                 self.logger.warning("The default repository associated with your project already contains a commit. There needs to be a clean repository.")
-                repository_name = prompt_y_n('We will create that repository. What would you like to call the new repository?')
+                repository_name = prompt('We will create that repository. What would you like to call the new repository?')
                 repository = create_devops_repository(self.cmd, self.organization_name, self.project_name, repository_name)
                 # TODO validate that the making of the devops repository worked correctly ...
                 self.repository_name = repository_name
+                self.build_definition_name += repository_name
+                self.release_definition_name += repository_name
 
         # Since they do not have a git file locally we can setup the git locally as is
         setup_devops_repository_locally(self.cmd, self.organization_name, self.project_name, self.repository_name)
@@ -300,19 +331,41 @@ class AzureDevopsBuildInteractive(object):
         self.logger.info("Selected functionapp %s", functionapp.name)
         return functionapp
 
+    def _find_local_language(self):
+        # We want to check that locally the language that they are using matches the type of application they 
+        # are deploying to
+        with open('local.settings.json') as f:
+            settings = json.load(f)
+        try:
+            local_language = settings['Values']['FUNCTIONS_WORKER_RUNTIME']
+        except:
+            self.logger.critical('The app \'FUNCTIONS_WORKER_RUNTIME\' setting is not set in the local.settings.json file')
+            exit(1)
+        if local_language == '':
+            self.logger.critical('The app \'FUNCTIONS_WORKER_RUNTIME\' setting is not set in the local.settings.json file')
+            exit(1)
+        
+        return local_language
+
     def _find_language_and_storage_name(self, app_settings):
+        local_language = self._find_local_language()
         for app_setting in app_settings:
             if app_setting['name'] == "FUNCTIONS_WORKER_RUNTIME":
                 language_str = app_setting['value']
+                if language_str != local_language:
+                    # We should not deploy if the local runtime language is not the same as that of their functionapp
+                    self.logger.critical("ERROR: The local language you are using (%s) does not match the language of your functionapp (%s)", local_language, language_str)
+                    self.logger.critical("Please look at the FUNCTIONS_WORKER_RUNTIME both in your local.settings.json and in your application settings on your azure functionapp.")
+                    exit(1)
                 if language_str == "python":
                     self.logger.info("detected that language used by functionapp is python")
                     language = PYTHON
                 elif language_str == "node":
                     self.logger.info("detected that language used by functionapp is node")
                     language = NODE
-                elif language_str == "net":
+                elif language_str == "dotnet":
                     self.logger.info("detected that language used by functionapp is .net")
-                    language = NET
+                    language = DOTNET
                 elif language_str == "java":
                     self.logger.info("detected that language used by functionapp is java")
                     language = JAVA

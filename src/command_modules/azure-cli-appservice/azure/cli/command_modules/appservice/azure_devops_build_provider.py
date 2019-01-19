@@ -68,10 +68,9 @@ class AzureDevopsBuildProvider(object):
         project = project_manager.create_project(project_name)
         return project
 
-    def create_yaml(self, language, appType, functionapp_name, subscription_name, storage_name):
+    def create_yaml(self, language, appType):
         yaml_manager = YamlManager(language, appType)
-        # TODO when devops switch to all in one yaml file you will need to add an include release paramater and set it to true
-        yaml_manager.create_yaml(functionapp_name, subscription_name, storage_name, include_release=False)
+        yaml_manager.create_yaml()
 
     def create_repository(self, organization_name, project_name, repository_name):
         repository_manager = RepositoryManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
@@ -131,10 +130,10 @@ class AzureDevopsBuildProvider(object):
         return artifact_manager.list_artifacts(build_id)
 
     def create_release_definition(self, organization_name, project_name, build_name, artifact_name, pool_name, service_endpoint_name,
-                                  release_definition_name, app_type, functionapp_name, storage_name, resource_name):
+                                  release_definition_name, app_type, functionapp_name, storage_name, resource_name, settings):
         release_manager = ReleaseManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
         return release_manager.create_release_definition(build_name, artifact_name, pool_name, service_endpoint_name, release_definition_name,
-                                                         app_type, functionapp_name, storage_name, resource_name)
+                                                         app_type, functionapp_name, storage_name, resource_name, settings=settings)
 
     def list_release_definitions(self, organization_name, project_name):
         release_manager = ReleaseManager(organization_name=organization_name, project_name=project_name, creds=self._creds)

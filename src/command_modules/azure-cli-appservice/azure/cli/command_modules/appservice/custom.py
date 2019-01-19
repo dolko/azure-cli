@@ -2256,9 +2256,10 @@ def create_devops_project(cmd, organization_name, project_name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
     return azure_devops_build_provider.create_project(organization_name, project_name)
 
-def create_yaml_file(cmd, language, appType, functionapp_name, subscription_name, storage_name):
+def create_yaml_file(cmd, language, appType):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
-    return azure_devops_build_provider.create_yaml(language, appType, functionapp_name, subscription_name, storage_name)
+    #TODO change the app type to the constants from the user input
+    return azure_devops_build_provider.create_yaml(language, appType)
 
 def list_devops_repositories(cmd, organization_name, project_name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
@@ -2332,12 +2333,12 @@ def list_release_definitions(cmd, organization_name, project_name):
 
 def create_release_definition(cmd, organization_name, project_name, build_name, artifact_name, pool_name,
                               service_endpoint_name, release_definition_name, app_type, functionapp_name,
-                              storage_name, resource_name):
+                              storage_name, resource_name, settings=[]):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)
     return azure_devops_build_provider.create_release_definition(organization_name, project_name, build_name,
                                                                  artifact_name, pool_name, service_endpoint_name,
                                                                  release_definition_name, app_type, functionapp_name,
-                                                                 storage_name, resource_name)
+                                                                 storage_name, resource_name, settings)
 
 def list_release_objects(cmd, organization_name, project_name):
     azure_devops_build_provider = AzureDevopsBuildProvider(cmd.cli_ctx)

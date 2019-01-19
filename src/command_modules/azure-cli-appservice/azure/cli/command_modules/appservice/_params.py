@@ -386,7 +386,7 @@ def load_arguments(self, _):
         c.argument('name', arg_type=name_arg_type, help="name of the devops project you want to create")
 
     with self.argument_context('functionapp devops-build yaml create') as c:
-        c.argument('language', help="the language of your functionapp that you are using", choices=['python', 'java', 'node', 'csharp'])
+        c.argument('language', help="the language of your functionapp that you are using", choices=['python', 'java', 'node', 'net'])
         c.argument('appType', help="the type of functionapp that you are using")
         
     with self.argument_context('functionapp devops-build respository') as c:
