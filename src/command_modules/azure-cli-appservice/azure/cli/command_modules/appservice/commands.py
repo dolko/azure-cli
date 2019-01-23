@@ -268,51 +268,51 @@ def load_command_table(self, _):
     with self.command_group('functionapp devops-build') as g:
         g.custom_command('create', 'create_devops_build')
 
-    with self.command_group('functionapp devops-build organization') as g:
-        g.custom_command('list', 'list_devops_organizations')
-        g.custom_command('create', 'create_devops_organization')
-        g.custom_command('regions', 'list_devops_organizations_regions')
+    # with self.command_group('functionapp devops-build organization') as g:
+    #     g.custom_command('list', 'list_devops_organizations')
+    #     g.custom_command('create', 'create_devops_organization')
+    #     g.custom_command('regions', 'list_devops_organizations_regions')
 
-    with self.command_group('functionapp devops-build project') as g:
-        g.custom_command('list', 'list_devops_projects')
-        g.custom_command('create', 'create_devops_project')
+    # with self.command_group('functionapp devops-build project') as g:
+    #     g.custom_command('list', 'list_devops_projects')
+    #     g.custom_command('create', 'create_devops_project')
 
-    with self.command_group('functionapp devops-build yaml') as g:
-        g.custom_command('create', 'create_yaml_file')
+    # with self.command_group('functionapp devops-build yaml') as g:
+    #     g.custom_command('create', 'create_yaml_file')
 
-    with self.command_group('functionapp devops-build repository') as g:
-        g.custom_command('list', 'list_devops_repositories')
-        g.custom_command('create', 'create_devops_repository')
-        g.custom_command('github-auth', 'create_github_repository_auth')
-        g.custom_command('github-list', 'list_github_repositories')
-        g.custom_command('setup-locally', 'setup_devops_repository_locally')
+    # with self.command_group('functionapp devops-build repository') as g:
+    #     g.custom_command('list', 'list_devops_repositories')
+    #     g.custom_command('create', 'create_devops_repository')
+    #     g.custom_command('github-auth', 'create_github_repository_auth')
+    #     g.custom_command('github-list', 'list_github_repositories')
+    #     g.custom_command('setup-locally', 'setup_devops_repository_locally')
     
-    with self.command_group('functionapp devops-build pool') as g:
-        g.custom_command('list', 'list_pools')
+    # with self.command_group('functionapp devops-build pool') as g:
+    #     g.custom_command('list', 'list_pools')
 
-    with self.command_group('functionapp devops-build service-principal-endpoint') as g:
-        g.custom_command('list', 'list_service_principal_endpoints')
-        g.custom_command('create', 'create_service_principal_endpoint')
+    # with self.command_group('functionapp devops-build service-principal-endpoint') as g:
+    #     g.custom_command('list', 'list_service_principal_endpoints')
+    #     g.custom_command('create', 'create_service_principal_endpoint')
 
-    with self.command_group('functionapp devops-build extension') as g:
-        g.custom_command('list', 'list_extensions')
-        g.custom_command('create', 'create_extension')
+    # with self.command_group('functionapp devops-build extension') as g:
+    #     g.custom_command('list', 'list_extensions')
+    #     g.custom_command('create', 'create_extension')
 
-    with self.command_group('functionapp devops-build build-definition') as g:
-        g.custom_command('list', 'list_build_definitions')
-        g.custom_command('create', 'create_build_definition')
+    # with self.command_group('functionapp devops-build build-definition') as g:
+    #     g.custom_command('list', 'list_build_definitions')
+    #     g.custom_command('create', 'create_build_definition')
 
-    with self.command_group('functionapp devops-build build-object') as g:
-        g.custom_command('list', 'list_build_objects')
-        g.custom_command('create', 'create_build_object')
+    # with self.command_group('functionapp devops-build build-object') as g:
+    #     g.custom_command('list', 'list_build_objects')
+    #     g.custom_command('create', 'create_build_object')
 
-    with self.command_group('functionapp devops-build build-artifact') as g:
-        g.custom_command('list', 'list_build_artifacts')
+    # with self.command_group('functionapp devops-build build-artifact') as g:
+    #     g.custom_command('list', 'list_build_artifacts')
 
-    with self.command_group('functionapp devops-build release-definition') as g:
-        g.custom_command('list', 'list_release_definitions')
-        g.custom_command('create', 'create_release_definition')
+    # with self.command_group('functionapp devops-build release-definition') as g:
+    #     g.custom_command('list', 'list_release_definitions')
+    #     g.custom_command('create', 'create_release_definition')
 
-    with self.command_group('functionapp devops-build release-object') as g:
-        g.custom_command('list', 'list_release_objects')
-        g.custom_command('create', 'create_release_object')
+    # with self.command_group('functionapp devops-build release-object') as g:
+    #     g.custom_command('list', 'list_release_objects')
+    #     g.custom_command('create', 'create_release_object')

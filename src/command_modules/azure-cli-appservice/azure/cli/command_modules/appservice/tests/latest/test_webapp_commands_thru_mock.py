@@ -366,6 +366,12 @@ class TestWebappMocked(unittest.TestCase):
         site_op_mock.assert_called_with(cli_ctx_mock, 'rg', 'web1', 'list_publishing_credentials', None)
         get_log_mock.assert_called_with(test_scm_url + '/dump', 'great_user', 'secret_password', None)
 
+
+    def test_devops_build_interactive(self):
+
+        
+
+
     def test_valid_linux_create_options(self):
         some_runtime = 'TOMCAT|8.5-jre8'
         test_docker_image = 'lukasz/great-image:123'

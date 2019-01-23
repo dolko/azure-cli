@@ -31,7 +31,7 @@ CLASSIFIERS = [
 
 DEPENDENCIES = [
     'azure-cli-core',
-    'azure-devops-build-manager',
+    'azure-functions-devops-build',
     'azure-mgmt-web==0.40.0',
     'azure-mgmt-storage==3.1.0',
     'azure-mgmt-containerregistry==2.4.0',

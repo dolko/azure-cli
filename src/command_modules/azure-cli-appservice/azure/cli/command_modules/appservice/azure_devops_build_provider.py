@@ -6,17 +6,16 @@
 from __future__ import print_function
 from azure.cli.core._profile import Profile
 
-from azure_devops_build_manager.organization.organization_manager import OrganizationManager
-from azure_devops_build_manager.user.user_manager import UserManager
-from azure_devops_build_manager.project.project_manager import ProjectManager
-from azure_devops_build_manager.yaml.yaml_manager import YamlManager
-from azure_devops_build_manager.respository.repository_manager import RepositoryManager
-from azure_devops_build_manager.pool.pool_manager import PoolManager
-from azure_devops_build_manager.service_endpoint.service_endpoint_manager import ServiceEndpointManager
-from azure_devops_build_manager.extension.extension_manager import ExtensionManager
-from azure_devops_build_manager.builder.builder_manager import BuilderManager
-from azure_devops_build_manager.artifact.artifact_manager import ArtifactManager
-from azure_devops_build_manager.release.release_manager import ReleaseManager
+from azure_functions_devops_build.organization.organization_manager import OrganizationManager
+from azure_functions_devops_build.project.project_manager import ProjectManager
+from azure_functions_devops_build.yaml.yaml_manager import YamlManager
+from azure_functions_devops_build.respository.repository_manager import RepositoryManager
+from azure_functions_devops_build.pool.pool_manager import PoolManager
+from azure_functions_devops_build.service_endpoint.service_endpoint_manager import ServiceEndpointManager
+from azure_functions_devops_build.extension.extension_manager import ExtensionManager
+from azure_functions_devops_build.builder.builder_manager import BuilderManager
+from azure_functions_devops_build.artifact.artifact_manager import ArtifactManager
+from azure_functions_devops_build.release.release_manager import ReleaseManager
 # pylint: disable=line-too-long
 
 class AzureDevopsBuildProvider(object):
@@ -26,9 +25,7 @@ class AzureDevopsBuildProvider(object):
 
     def list_organizations(self):
         organization_manager = OrganizationManager(creds=self._creds)
-        user_manager = UserManager(creds=self._creds)
-        userid = user_manager.get_user_id()
-        organizations = organization_manager.list_organizations(userid.id)
+        organizations = organization_manager.list_organizations()
         return organizations
 
     def list_regions(self):
@@ -88,6 +85,10 @@ class AzureDevopsBuildProvider(object):
         repository_manager = RepositoryManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
         return repository_manager.setup_repository(repository_name)
 
+    def setup_remote(self, organization_name, project_name, repository_name, remote_name):
+        repository_manager = RepositoryManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
+        return repository_manager.setup_remote(repository_name, remote_name)
+
     def list_pools(self, organization_name, project_name):
         pool_manager = PoolManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
         return pool_manager.list_pools()
@@ -113,7 +114,7 @@ class AzureDevopsBuildProvider(object):
                                              creds=self._creds)
         return builder_manager.create_definition(build_definition_name=build_definition_name, pool_name=pool_name)
 
-    def list_build_definition(self, organization_name, project_name):
+    def list_build_definitions(self, organization_name, project_name):
         builder_manager = BuilderManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
         return builder_manager.list_definitions()
 
@@ -121,7 +122,7 @@ class AzureDevopsBuildProvider(object):
         builder_manager = BuilderManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
         return builder_manager.create_build(build_definition_name, pool_name)
 
-    def list_build_object(self, organization_name, project_name):
+    def list_build_objects(self, organization_name, project_name):
         builder_manager = BuilderManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
         return builder_manager.list_builds()
 
