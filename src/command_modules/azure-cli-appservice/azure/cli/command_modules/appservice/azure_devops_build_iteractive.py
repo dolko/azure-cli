@@ -21,7 +21,7 @@ class AzureDevopsBuildInteractive(object):
         self.adbp = AzureDevopsBuildProvider(cmd.cli_ctx)
         self.cmd = cmd
         self.logger = logger
-        self.cmd_selector = CmdSelectors(cmd, logger)
+        self.cmd_selector = CmdSelectors(cmd, logger, self.adbp)
         self.functionapp_name = functionapp_name
         self.storage_name = None
         self.resource_group_name = None
@@ -124,14 +124,16 @@ class AzureDevopsBuildInteractive(object):
                 settings.append((key, value))
 
         if settings:
-            use_local_settings = prompt_y_n('Would you like to use your local settings on your host settings?')
+            use_local_settings = prompt_y_n('Would you like to transfer your local.settings.json to the host settings of your application running on Azure?') # pylint: disable=line-too-long
             if not use_local_settings:
                 settings = []
 
         self.settings = settings
 
         if os.path.exists('azure-pipelines.yml'):
-            response = prompt_y_n("There is already an azure pipelines yaml file. Do you want to delete it and create a new one? ")
+            self.logger.warning("There is already an azure pipelines yaml file.")
+            self.logger.warning("If you are using a yaml file that was not configured through this command this process may fail.") # pylint: disable=line-too-long
+            response = prompt_y_n("Do you want to delete it and create a new one? ")
         if (not os.path.exists('azure-pipelines.yml')) or response:
             self.adbp.create_yaml(self.functionapp_language, self.functionapp_type)
 
@@ -147,7 +149,7 @@ class AzureDevopsBuildInteractive(object):
         self.adbp.create_extension(self.organization_name, 'PascalNaber-Xpirit-CreateSasToken', 'pascalnaber')
 
     def process_service_endpoint(self):
-        service_endpoints =  self.adbp.list_service_endpoints(self.organization_name, self.project_name)
+        service_endpoints = self.adbp.list_service_endpoints(self.organization_name, self.project_name)
         service_endpoint_match = \
             [service_endpoint for service_endpoint in service_endpoints
              if service_endpoint.name == self.service_endpoint_name]
@@ -174,7 +176,8 @@ class AzureDevopsBuildInteractive(object):
         build = self.adbp.create_build_object(self.organization_name, self.project_name,
                                               self.build_definition_name, self.build_pool_name)
 
-        url = "https://dev.azure.com/" + self.organization_name + "/" + self.project_name + "/_build/results?buildId=" + str(build.id)
+        url = "https://dev.azure.com/" + self.organization_name + "/" \
+             + self.project_name + "/_build/results?buildId=" + str(build.id)
         self.logger.info("To follow the build process go to %s", url)
         self.build = build
 
@@ -192,19 +195,22 @@ class AzureDevopsBuildInteractive(object):
             counter += 1
 
         if build.result == 'failed':
-            url = "https://dev.azure.com/" + self.organization_name + "/" + self.project_name + "/_build/results?buildId=" + str(build.id)
+            url = "https://dev.azure.com/" + self.organization_name + "/" \
+                 + self.project_name + "/_build/results?buildId=" + str(build.id)
             self.logger.critical("Your build has failed")
             self.logger.critical("To view details on why your build has failed please go to %s", url)
             exit(1)
 
         self.adbp.create_release_definition(self.organization_name, self.project_name,
-                                            self.build_definition_name, self.artifact_name, self.release_pool_name,
-                                            self.service_endpoint_name, self.release_definition_name, self.functionapp_type,
-                                            self.functionapp_name, self.storage_name, self.resource_group_name, self.settings)
+                                            self.build_definition_name, self.artifact_name,
+                                            self.release_pool_name, self.service_endpoint_name,
+                                            self.release_definition_name, self.functionapp_type,
+                                            self.functionapp_name, self.storage_name,
+                                            self.resource_group_name, self.settings)
         release = self.adbp.create_release(self.organization_name, self.project_name,
                                            self.release_definition_name)
-
-        url = "https://dev.azure.com/" + self.organization_name + "/" + self.project_name + "/_releaseProgress?_a=release-environment-logs&releaseId=" + str(release.id)
+        url = "https://dev.azure.com/" + self.organization_name + "/" \
+             + self.project_name + "/_releaseProgress?_a=release-environment-logs&releaseId=" + str(release.id)
         self.logger.info("To follow the release process go to %s", url)
         self.release = release
 
@@ -218,43 +224,48 @@ class AzureDevopsBuildInteractive(object):
         return 'other'
 
     def setup_devops_repository_with_existing(self):
-        command_options = ['Delete git folder locally (linux)', 'Delete git file locally (windows)', 'Add a remote']
+        print()
+        command_options = ['Delete git folder locally', 'Add a remote']
         choice_index = prompt_choice_list('Please choose the action you would like to take: ', command_options)
         command = command_options[choice_index]
 
-        if command == 'Delete git folder locally (linux)':
-            os.system("rm -rf .git")
-            self.process_git_doesnt_exist()
-        elif command == 'Delete git file locally (windows)':
-            os.system("rmdir /s /q .git")
+        if command == 'Delete git folder locally':
+            # https://docs.python.org/3/library/os.html#os.name (if os.name is nt it is windows)
+            if os.name == 'nt':
+                os.system("rmdir /s /q .git")
+            else:
+                os.system("rm -rf .git")
             self.process_git_doesnt_exist()
         else:
             setup = self.adbp.setup_remote(self.organization_name, self.project_name,
                                            self.repository_name, 'devopsbuild')
             if not setup.succeeded:
-                self.logger.critical('It looks like you already have a remote called devopsbuild. This indicates that you already likely have a pipeline setup.')
-                self.logger.critical('Please either delete the local git file or use that already setup pipeline')
+                self.logger.critical('It looks like you already have a remote called devopsbuild. This indicates that you already have a pipeline setup.') # pylint: disable=line-too-long
+                self.logger.critical('This command is only to setup a build|release pipeline.')
+                self.logger.critical('If you want to run your existing pipeline just push your changes in git to the devopsbuild remote.') # pylint: disable=line-too-long
                 exit(1)
 
     def process_git_exists(self):
         self.logger.warning("There is a local git file.")
-        response = prompt_y_n('Would you like to use the git repository that you are referencing locally? ')
+        response = prompt_y_n('Would you like to use the git repository that you are referencing locally to set up your build? ') # pylint: disable=line-too-long
 
         if response:
             repository_type = self.find_type_repository()
             self.logger.info("We have detected that you have a %s type of repository", repository_type)
             if repository_type == 'github':
+                # TODO - check if they already have a link for the github connection?
+
                 # They need to login and connect up their github account
                 github_connection = self._create_github_connection()
                 print("Please click the following link to finish your authentication: %s", github_connection.url)
-                finished = prompt_y_n('Type y to continue one you have finished logging into your github account. Type n if you had an issue')
+                finished = prompt_y_n('Type y to continue one you have finished logging into your github account. Type n if you had an issue') # pylint: disable=line-too-long
                 if not finished:
                     url = "https://dev.azure.com/" + self.organization_name + "/" + self.project_name + "/_build"
                     print("You can try setting up the authentication manually. Go to %s .", url)
-                    print("Select new pipeline. When you are prompted with where is your code click 'Github'. Click authorize.")
-                    finished_2 = prompt_y_n('Type y to continue one you have finished authorizing. Type n if you had an issue')
+                    print("Select new pipeline. When you are prompted with where is your code click 'Github'. Click authorize.")  # pylint: disable=line-too-long
+                    finished_2 = prompt_y_n('Type y to continue one you have finished authorizing. Type n if you had an issue')  # pylint: disable=line-too-long
                     if not finished_2:
-                        self.logger.error("We were unsuccessful in setting up your github connection. Please follow another option below NOT involving your github account.")
+                        self.logger.error("We were unsuccessful in setting up your github connection. Please follow another option below NOT involving your github account.")  # pylint: disable=line-too-long
                         self.setup_devops_repository_with_existing()
                 if finished or finished_2:
                     # TODO validate that the connection worked
@@ -264,7 +275,7 @@ class AzureDevopsBuildInteractive(object):
                 # Figure out what the repository information is for their current azure repos account
                 lines = (check_output('git remote show origin'.split())).decode('utf-8').split('\n')
                 for line in lines:
-                    if re.search('Push',line):
+                    if re.search('Push', line):
                         m = re.search('http.*', line)
                         url = m.group(0)
                         segs = url.split('/')
@@ -272,11 +283,11 @@ class AzureDevopsBuildInteractive(object):
                         project_name = segs[3]
                         repository_name = segs[5]
                 if (organization_name == self.organization_name) and (project_name == self.project_name):
-                    print("It looks like your local repository is the same as the one you are trying to make a build for")
+                    print("It looks like your local repository is the same as the one you are trying to make a build for")  # pylint: disable=line-too-long
                     self.repository_name = repository_name
                 else:
-                    print("It looks like your local repository IS NOT the same as the one you are trying to make a build for")
-                    switch = prompt_y_n('Would you like to use the repository that you are currently referencing locally to do the build?')
+                    print("It looks like your local repository IS NOT the same as the one you are trying to make a build for")  # pylint: disable=line-too-long
+                    switch = prompt_y_n('Would you like to use the repository that you are currently referencing locally to do the build?')  # pylint: disable=line-too-long
                     if switch:
                         # We don't need to push to it as it is all currently there
                         self.organization_name = organization_name
@@ -289,7 +300,6 @@ class AzureDevopsBuildInteractive(object):
                 self.setup_devops_repository_with_existing()
         else:
             self.setup_devops_repository_with_existing()
-         
 
     def process_git_doesnt_exist(self):
         # check if we need to make a repository
@@ -307,7 +317,7 @@ class AzureDevopsBuildInteractive(object):
                 self.logger.warning("The default repository associated with your project already contains a commit. There needs to be a clean repository.") # pylint: disable=line-too-long
                 succeeded = False
                 while not succeeded:
-                    repository_name = prompt('We will create that repository. What would you like to call the new repository?')
+                    repository_name = prompt('We will create that repository. What would you like to call the new repository?') # pylint: disable=line-too-long
                     # Validate that the name does not already exist
                     repositories = self.adbp.list_repositories(self.organization_name, self.project_name)
                     repository_match = \
@@ -327,6 +337,13 @@ class AzureDevopsBuildInteractive(object):
         self.logger.info("Retrieving functionapp names.")
         functionapps = list_function_app(self.cmd)
         functionapp_names = sorted([functionapp.name for functionapp in functionapps])
+        if len(functionapp_names) < 1:
+            self.logger.error("You do not have any existing functionapps associated with this account subscription.")
+            self.logger.error("1. Please make sure you are logged into the right azure account by running `az account show` and checking the user.") # pylint: disable=line-too-long
+            self.logger.error("2. If you are logged in as the right account please check the subscription you are using. Run `az account show` and view the name.") # pylint: disable=line-too-long
+            self.logger.error("   If you need to set the subscription run `az account set --subscription \"{SUBSCRIPTION_NAME}\"`") # pylint: disable=line-too-long
+            self.logger.error("3. If you do not have a functionapp please create one in the portal.")
+            exit(1)
         choice_index = prompt_choice_list('Please choose the functionapp: ', functionapp_names)
         functionapp = [functionapp for functionapp in functionapps
                        if functionapp.name == functionapp_names[choice_index]][0]
@@ -404,13 +421,14 @@ class AzureDevopsBuildInteractive(object):
 
     def _get_organization_by_name(self, organization_name):
         organizations = self.adbp.list_organizations()
-        return [organization for organization in organizations.value if organization.accountName == organization_name][0]
+        return [organization for organization in organizations.value
+                if organization.accountName == organization_name][0]
 
     def _create_organization(self):
         self.logger.info("Starting process to create a new Azure DevOps organization")
         regions = self.adbp.list_regions()
         region_names = sorted([region.display_name for region in regions.value])
-        self.logger.info("The region for an Azure DevOps organization is where the organization will be located. Try locate it near your other resources and your location")
+        self.logger.info("The region for an Azure DevOps organization is where the organization will be located. Try locate it near your other resources and your location") # pylint: disable=line-too-long
         choice_index = prompt_choice_list('Please select a region for the new organization: ', region_names)
         region = [region for region in regions.value if region.display_name == region_names[choice_index]][0]
 
@@ -422,7 +440,6 @@ class AzureDevopsBuildInteractive(object):
                 self.logger.warning("Note: any name must be globally unique")
             else:
                 break
-
         url = "https://dev.azure.com/" + new_organization.name + "/"
         self.logger.info("Finished creating the new organization. Click the link to see your new organization: %s", url)
         self.organization_name = new_organization.name
@@ -435,7 +452,7 @@ class AzureDevopsBuildInteractive(object):
             project = [project for project in projects.value if project.name == project_names[choice_index]][0]
             self.project_name = project.name
         else:
-            self.logger.warning("There are no exisiting projects in this organization. You need to create a new project.")
+            self.logger.warning("There are no exisiting projects in this organization. You need to create a new project.") # pylint: disable=line-too-long
             self._create_project()
 
     def _create_project(self):
@@ -463,16 +480,17 @@ class AzureDevopsBuildInteractive(object):
 
 class CmdSelectors(object):
 
-    def __init__(self, cmd, logger):
+    def __init__(self, cmd, logger, adbp):
         self.cmd = cmd
         self.logger = logger
+        self.adbp = adbp
 
     def cmd_functionapp(self, functionapp_name):
         functionapps = list_function_app(self.cmd)
         functionapp_match = [functionapp for functionapp in functionapps
                              if functionapp.name == functionapp_name]
         if len(functionapp_match) != 1:
-            self.logger.error("""Error finding functionapp. Please check that the functionapp exists using 'az functionapp list'""")
+            self.logger.error("""Error finding functionapp. Please check that the functionapp exists using 'az functionapp list'""") # pylint: disable=line-too-long
             exit(1)
         else:
             functionapp = functionapp_match[0]
@@ -484,7 +502,7 @@ class CmdSelectors(object):
                               if organization.accountName == organization_name]
         if len(organization_match) != 1:
             #TODO need to fix this error message if I am getting rid of the other commands
-            self.logger.error("""Error finding organization. Please check that the organization exists using 'functionapp devops-build organization list'""")
+            self.logger.error("""Error finding organization. Please check that the organization exists using 'functionapp devops-build organization list'""") # pylint: disable=line-too-long
             exit(1)
         else:
             organization = organization_match[0]
@@ -498,7 +516,7 @@ class CmdSelectors(object):
 
         if len(project_match) != 1:
             #TODO need to fix this error message if I am getting rid of the other commands
-            self.logger.error("Error finding project. Please check that the project exists using 'functionapp devops-build project list'")
+            self.logger.error("Error finding project. Please check that the project exists using 'functionapp devops-build project list'") # pylint: disable=line-too-long
             exit(1)
         else:
             project = project_match[0]
