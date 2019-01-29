@@ -30,6 +30,7 @@ FTPS_STATE_TYPES = ['AllAllowed', 'FtpsOnly', 'Disabled']
 OS_TYPES = ['Windows', 'Linux']
 LINUX_RUNTIMES = ['dotnet', 'node', 'python']
 WINDOWS_RUNTIMES = ['dotnet', 'node', 'java']
+EXISTING_GIT_OPTIONS = ['AddRemote', 'AddNewRepository', 'UseExisting']
 
 # pylint: disable=too-many-statements
 
@@ -376,7 +377,11 @@ def load_arguments(self, _):
         c.argument('slot_settings', nargs='+', help="space-separated slot app settings in a format of <name>=<value>")
 
     with self.argument_context('functionapp devops-build') as c:
-        c.argument('functionapp_name', options_list=['--functionapp_name', '-fn'], help="name of the functionapp that you want to use")
-        c.argument('organization_name', options_list=['--organization_name', '-on'], help="name of the Azure DevOps organization that you want to use")
-        c.argument('project_name', options_list=['--project_name', '-pn'], help="name of the Azure DevOps project that you want to use")
-
+        c.argument('functionapp_name', help="Name of the Azure Function App that you want to use", required=False)
+        c.argument('organization_name', help="Name of the Azure DevOps organization that you want to use", required=False)
+        c.argument('project_name', help="Name of the Azure DevOps project that you want to use", required=False)
+        c.argument('overwrite_yaml', help="If you have an existing yaml, should it be overwritten?", choices=['true', 'false'], required=False)
+        c.argument('use_local_settings', help="Use your local settings in your functionapp settings?", choices=['true', 'false'], required=False)
+        c.argument('local_git', help="If you want have a local git repository in this folder, what should we do? Adding a remote will preserve your local repository and use a remote to reference the build repository. "
+                                     "Adding a new repository will remove your local git and create a new repostiory erase your current repository and create a new one. Use existing will attempt to use your local repository if it is an azure repository"
+                                     " otherwise it will fail", arg_type=get_enum_type(EXISTING_GIT_OPTIONS), required=False)

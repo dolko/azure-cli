@@ -45,9 +45,7 @@ from azure.cli.core.util import open_page_in_browser
 
 from .tunnel import TunnelServer
 
-from azure.cli.core._profile import Profile
 from .vsts_cd_provider import VstsContinuousDeliveryProvider
-from .azure_devops_build_provider import AzureDevopsBuildProvider
 from ._params import AUTH_TYPES, MULTI_CONTAINER_TYPES, LINUX_RUNTIMES, WINDOWS_RUNTIMES
 from ._client_factory import web_client_factory, ex_handler_factory
 from ._appservice_utils import _generic_site_operation
@@ -2328,8 +2326,11 @@ def ssh_webapp(cmd, resource_group_name, name, slot=None):  # pylint: disable=to
         create_tunnel(cmd, resource_group_name, name, port=None, slot=slot)
 
 
-def create_devops_build(cmd, functionapp_name=None, organization_name=None, project_name=None):
+def create_devops_build(cmd, functionapp_name=None, organization_name=None, project_name=None,
+                        overwrite_yaml=None, use_local_settings=None, local_git=None):
     from .azure_devops_build_iteractive import AzureDevopsBuildInteractive
     azure_devops_build_interactive = AzureDevopsBuildInteractive(cmd, logger, functionapp_name,
-                                                                 organization_name, project_name)
+                                                                 organization_name, project_name,
+                                                                 overwrite_yaml, use_local_settings,
+                                                                 local_git)
     azure_devops_build_interactive.interactive_azure_devops_build()
