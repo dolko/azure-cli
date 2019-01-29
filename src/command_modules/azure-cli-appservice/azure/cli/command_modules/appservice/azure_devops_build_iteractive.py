@@ -448,7 +448,7 @@ class AzureDevopsBuildInteractive(object):
         projects = self.adbp.list_projects(self.organization_name)
         if projects.count > 0:
             project_names = sorted([project.name for project in projects.value])
-            choice_index = prompt_choice_list('Please select a region for the new organization: ', project_names)
+            choice_index = prompt_choice_list('Please select your project: ', project_names)
             project = [project for project in projects.value if project.name == project_names[choice_index]][0]
             self.project_name = project.name
         else:
