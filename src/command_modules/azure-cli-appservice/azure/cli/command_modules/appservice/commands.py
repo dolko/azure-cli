@@ -221,6 +221,7 @@ def load_command_table(self, _):
         g.custom_command('identity assign', 'assign_identity')
         g.custom_show_command('identity show', 'show_identity')
         g.custom_command('identity remove', 'remove_identity')
+        g.custom_command('devops-build', 'create_devops_build')
         g.generic_update_command('update', setter_name='set_functionapp', setter_type=appservice_custom, command_type=webapp_sdk)
 
     with self.command_group('functionapp config') as g:

@@ -1054,3 +1054,8 @@ helps['functionapp plan create'] = """
           text: >
             az functionapp plan create -g MyResourceGroup -n MyPlan --number-of-workers 4 --sku S1
 """
+
+helps['functionapp devops-build'] = """
+    type: command
+    short-summary: Create an Azure Devops build pipeline for a function app.
+"""
