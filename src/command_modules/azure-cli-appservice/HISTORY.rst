@@ -13,6 +13,10 @@ Release History
 ++++++
 * functionapp: az functionapp devops-build, new command created
 
+0.2.12
+++++++
+* functionapp: az functionapp devops-build, new command created
+
 0.2.11
 ++++++
 * webapp: az webapp config ssl upload, handling the scenario of uploading certificates on apps that are hosted on an ASE, where the ASE RG & App RG are different
