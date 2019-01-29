@@ -2254,7 +2254,6 @@ def _ping_scm_site(cmd, resource_group, name):
     authorization = urllib3.util.make_headers(basic_auth='{}:{}'.format(user_name, password))
     requests.get(scm_url + '/api/settings', headers=authorization)
 
-<<<<<<< HEAD
 
 def _check_for_ready_tunnel(tunnel_server):
     return tunnel_server.is_port_set_to_default()
@@ -2327,9 +2326,10 @@ def ssh_webapp(cmd, resource_group_name, name, slot=None):  # pylint: disable=to
         raise CLIError('webapp ssh is only supported on linux and mac')
     else:
         create_tunnel(cmd, resource_group_name, name, port=None, slot=slot)
-=======
+
+
 def create_devops_build(cmd, functionapp_name=None, organization_name=None, project_name=None):
     from .azure_devops_build_iteractive import AzureDevopsBuildInteractive
-    azure_devops_build_interactive = AzureDevopsBuildInteractive(cmd, logger, functionapp_name, organization_name, project_name)
+    azure_devops_build_interactive = AzureDevopsBuildInteractive(cmd, logger, functionapp_name,
+                                                                 organization_name, project_name)
     azure_devops_build_interactive.interactive_azure_devops_build()
->>>>>>> adding functionapp devops-build create
