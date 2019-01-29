@@ -2285,8 +2285,82 @@ def _ping_scm_site(cmd, resource_group, name):
     authorization = urllib3.util.make_headers(basic_auth='{}:{}'.format(user_name, password))
     requests.get(scm_url + '/api/settings', headers=authorization)
 
+
+def _check_for_ready_tunnel(tunnel_server):
+    return tunnel_server.is_port_set_to_default()
+
+
+def create_tunnel(cmd, resource_group_name, name, port=None, slot=None):
+    webapp = show_webapp(cmd, resource_group_name, name, slot)
+    is_linux = webapp.reserved
+    if not is_linux:
+        raise CLIError("Only Linux App Service Plans supported, Found a Windows App Service Plan")
+
+    profiles = list_publish_profiles(cmd, resource_group_name, name, slot)
+    profile_user_name = next(p['userName'] for p in profiles)
+    profile_user_password = next(p['userPWD'] for p in profiles)
+
+    ssh_user_name = 'root'
+    ssh_user_password = 'Docker!'
+
+    if port is None:
+        port = 0  # Will auto-select a free port from 1024-65535
+        logger.info('No port defined, creating on random free port')
+    host_name = name
+
+    if slot is not None:
+        host_name += "-" + slot
+
+    tunnel_server = TunnelServer('', port, host_name, profile_user_name, profile_user_password)
+    _ping_scm_site(cmd, resource_group_name, name)
+
+    t = threading.Thread(target=_start_tunnel, args=(tunnel_server,))
+    t.daemon = True
+    t.start()
+
+    _wait_for_tunnel(tunnel_server, False)
+    logger.warning("SSH is available ( username: %s, password: %s )", ssh_user_name, ssh_user_password)
+
+    s = threading.Thread(target=_start_ssh,
+                         args=('localhost', tunnel_server.get_port(), ssh_user_name))
+    s.daemon = True
+    s.start()
+
+    while s.isAlive() and t.isAlive():
+        time.sleep(5)
+
+
+def _wait_for_tunnel(tunnel_server, print_warnings):
+    if not _check_for_ready_tunnel(tunnel_server):
+        if print_warnings:
+            logger.warning('Tunnel is not ready yet, please wait (may take up to 1 minute)')
+        while True:
+            time.sleep(1)
+            if print_warnings:
+                logger.warning('.')
+            if _check_for_ready_tunnel(tunnel_server):
+                break
+
+
+def _start_tunnel(tunnel_server):
+    _wait_for_tunnel(tunnel_server, True)
+    tunnel_server.start_server()
+
+
+def _start_ssh(host_name, port, user_name):
+    subprocess.call("ssh -o StrictHostKeyChecking=no {}@{} -p {}".format(user_name, host_name, port), shell=True)
+
+
+def ssh_webapp(cmd, resource_group_name, name, slot=None):  # pylint: disable=too-many-statements
+    import platform
+    if platform.system() == "Windows":
+        raise CLIError('webapp ssh is only supported on linux and mac')
+    else:
+        create_tunnel(cmd, resource_group_name, name, port=None, slot=slot)
+
+
 def create_devops_build(cmd, functionapp_name=None, organization_name=None, project_name=None):
     from .azure_devops_build_iteractive import AzureDevopsBuildInteractive
-    azure_devops_build_interactive = AzureDevopsBuildInteractive(cmd, logger, functionapp_name, organization_name, project_name)
+    azure_devops_build_interactive = AzureDevopsBuildInteractive(cmd, logger, functionapp_name,
+                                                                 organization_name, project_name)
     azure_devops_build_interactive.interactive_azure_devops_build()
-
