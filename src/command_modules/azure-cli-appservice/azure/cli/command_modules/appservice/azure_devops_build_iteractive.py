@@ -296,7 +296,7 @@ class AzureDevopsBuildInteractive(object):
             command = self.local_git
 
         if command == 'AddNewRepository':
-            self.logger("Removing your old, adding a new repository.")
+            self.logger.info("Removing your old, adding a new repository.")
             # https://docs.python.org/3/library/os.html#os.name (if os.name is nt it is windows)
             if os.name == 'nt':
                 os.system("rmdir /s /q .git")
