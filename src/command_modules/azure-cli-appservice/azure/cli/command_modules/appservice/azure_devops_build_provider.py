@@ -114,6 +114,11 @@ class AzureDevopsBuildProvider(object):  # pylint: disable=too-many-public-metho
         pool_manager = PoolManager(organization_name=organization_name, project_name=project_name, creds=self._creds)
         return pool_manager.list_pools()
 
+    def create_github_service_endpoint(self, organization_name, project_name, name, github_pat):
+        service_endpoint_manager = ServiceEndpointManager(organization_name=organization_name,
+                                                          project_name=project_name, creds=self._creds)
+        return service_endpoint_manager.create_github_service_endpoint(name, github_pat)
+
     def create_service_endpoint(self, organization_name, project_name, name):
         """Create a service endpoint to allow authentication via ARM service principal"""
         service_endpoint_manager = ServiceEndpointManager(organization_name=organization_name,
@@ -137,11 +142,11 @@ class AzureDevopsBuildProvider(object):  # pylint: disable=too-many-public-metho
         return extension_manager.list_extensions()
 
     def create_build_definition(self, organization_name, project_name, repository_name,
-                                build_definition_name, pool_name):
+                                build_definition_name, pool_name, github=False):
         """Create a definition for an azure devops build"""
         builder_manager = BuilderManager(organization_name=organization_name, project_name=project_name,
                                          repository_name=repository_name, creds=self._creds)
-        return builder_manager.create_definition(build_definition_name=build_definition_name, pool_name=pool_name)
+        return builder_manager.create_definition(build_definition_name=build_definition_name, pool_name=pool_name, github=github)
 
     def list_build_definitions(self, organization_name, project_name):
         """List the azure devops build definitions within a project"""

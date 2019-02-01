@@ -4,7 +4,12 @@
 # --------------------------------------------------------------------------------------------
 
 import os
-from subprocess import check_output, CalledProcessError
+from subprocess import check_output, CalledProcessError, check_call, STDOUT
+# In python2.7 devnull is not defined in subprocess
+try:
+    from subprocess import DEVNULL
+except ImportError:
+    DEVNULL = open(os.devnull, 'w')
 import time
 import re
 import json
@@ -36,7 +41,7 @@ class AzureDevopsBuildInteractive(object):
     """
 
     def __init__(self, cmd, logger, functionapp_name, organization_name, project_name,
-                 overwrite_yaml, use_local_settings, local_git):
+                 overwrite_yaml, use_local_settings, local_git, github_pat):
         self.adbp = AzureDevopsBuildProvider(cmd.cli_ctx)
         self.cmd = cmd
         self.logger = logger
@@ -65,6 +70,12 @@ class AzureDevopsBuildInteractive(object):
         self.overwrite_yaml = str2bool(overwrite_yaml)
         self.use_local_settings = str2bool(use_local_settings)
         self.local_git = local_git
+        self.github_pat = github_pat
+        if self.github_pat is not None:
+            self.github_build = True
+        else:
+            self.github_build = False
+        self.github_endpoint_name = "azurefunctionsdevopsbuild"
 
     def interactive_azure_devops_build(self):
         """Main interactive flow which is the only function that should be used outside of this
@@ -199,7 +210,25 @@ class AzureDevopsBuildInteractive(object):
         self.adbp.create_extension(self.organization_name, 'AzureAppServiceSetAppSettings', 'hboelman')
         self.adbp.create_extension(self.organization_name, 'PascalNaber-Xpirit-CreateSasToken', 'pascalnaber')
 
+    def process_githhub_service_endpoint(self):
+        service_endpoints = self.adbp.list_service_endpoints(self.organization_name, self.project_name)
+        github_endpoint_match = \
+            [service_endpoint for service_endpoint in service_endpoints
+             if service_endpoint.name == self.github_endpoint_name]
+
+        if len(github_endpoint_match) != 1:
+            github_endpoint = self.adbp.create_github_service_endpoint(self.organization_name,
+                                                                       self.project_name,
+                                                                       self.github_endpoint_name,
+                                                                       self.github_pat)
+        else:
+            github_endpoint = github_endpoint_match[0]
+        return github_endpoint
+
     def process_service_endpoint(self):
+        if self.github_pat is not None:
+            self.process_githhub_service_endpoint()
+
         service_endpoints = self.adbp.list_service_endpoints(self.organization_name, self.project_name)
         service_endpoint_match = \
             [service_endpoint for service_endpoint in service_endpoints
@@ -222,7 +251,7 @@ class AzureDevopsBuildInteractive(object):
         if len(build_definition_match) != 1:
             self.adbp.create_build_definition(self.organization_name, self.project_name,
                                               self.repository_name, self.build_definition_name,
-                                              self.build_pool_name)
+                                              self.build_pool_name, self.github_build)
 
         build = self.adbp.create_build_object(self.organization_name, self.project_name,
                                               self.build_definition_name, self.build_pool_name)
@@ -305,51 +334,76 @@ class AzureDevopsBuildInteractive(object):
             self.logger.critical('If you want to run your existing pipeline just push your changes in git to the devopsbuild remote.')  # pylint: disable=line-too-long
             exit(1)
 
+    def find_github_repository_name(self):
+        lines = (check_output('git remote show origin'.split())).decode('utf-8').split('\n')
+        for line in lines:
+            if re.search('Push', line):
+                repository_name = "/".join(line.split('/')[-2:]).split('.')[0] 
+                self.logger.info("Repository name: %s", repository_name)
+                return repository_name
+        self.logger.error('Was unable to find a local origin. Please ensure that `git remote show origin` gives a valid push destination.')
+        exit(1)
+
+    def process_github(self):
+        # We need to just add the new azure pipelines file
+        check_call('git add -A'.split(), stdout=DEVNULL, stderr=STDOUT)
+        try:
+            check_call(["git", "commit", "-a", "-m", "\"creating functions app\""], stdout=DEVNULL, stderr=STDOUT)
+        except CalledProcessError:
+            self.logger.debug("already up to date")
+        check_call('git push'.split(), stdout=DEVNULL, stderr=STDOUT)
+
+        # Also need to find the name of the github repository that they are currently in
+        self.repository_name = self.find_github_repository_name()
+
     def process_git_exists(self):
         self.logger.warning("There is a local git file.")
 
-        if self.local_git is None:
-            self.logger.warning("1. Chosing the add remote will create a new remote to the build repository but otherwise preserve your local git")  # pylint: disable=line-too-long
-            self.logger.warning("2. Chosing the add new repository will delete your local git file and create a new one with a reference to the build repository.")  # pylint: disable=line-too-long
-            self.logger.warning("3. Choosing the use existing will use the repository you are referencing to do the build. Only choose use existing if your local git file is referencing an azure repository that you can create a build with.")  # pylint: disable=line-too-long
-            command_options = ['AddRemote', 'AddNewRepository', 'UseExisting']
-            choice_index = prompt_choice_list('Please choose the action you would like to take: ', command_options)
-            command = command_options[choice_index]
+        if self.github_pat is not None:
+            self.process_github()
         else:
-            command = self.local_git
+            if self.local_git is None:
+                self.logger.warning("1. Chosing the add remote will create a new remote to the build repository but otherwise preserve your local git")  # pylint: disable=line-too-long
+                self.logger.warning("2. Chosing the add new repository will delete your local git file and create a new one with a reference to the build repository.")  # pylint: disable=line-too-long
+                self.logger.warning("3. Choosing the use existing will use the repository you are referencing to do the build. Only choose use existing if your local git file is referencing an azure repository that you can create a build with.")  # pylint: disable=line-too-long
+                command_options = ['AddRemote', 'AddNewRepository', 'UseExisting']
+                choice_index = prompt_choice_list('Please choose the action you would like to take: ', command_options)
+                command = command_options[choice_index]
+            else:
+                command = self.local_git
 
-        if command == 'AddNewRepository':
-            self.logger.info("Removing your old, adding a new repository.")
-            # https://docs.python.org/3/library/os.html#os.name (if os.name is nt it is windows)
-            if os.name == 'nt':
-                os.system("rmdir /s /q .git")
+            if command == 'AddNewRepository':
+                self.logger.info("Removing your old, adding a new repository.")
+                # https://docs.python.org/3/library/os.html#os.name (if os.name is nt it is windows)
+                if os.name == 'nt':
+                    os.system("rmdir /s /q .git")
+                else:
+                    os.system("rm -rf .git")
+                self.process_git_doesnt_exist()
+            elif command == 'AddRemote':
+                self.process_remote()
             else:
-                os.system("rm -rf .git")
-            self.process_git_doesnt_exist()
-        elif command == 'AddRemote':
-            self.process_remote()
-        else:
-            # default is to try and use the existing azure repo
-            repository_type = self.find_type_repository()
-            self.logger.info("We have detected that you have a %s type of repository", repository_type)
-            if repository_type == 'azure repos':
-                # Figure out what the repository information is for their current azure repos account
-                lines = (check_output('git remote show origin'.split())).decode('utf-8').split('\n')
-                for line in lines:
-                    if re.search('Push', line):
-                        m = re.search('http.*', line)
-                        url = m.group(0)
-                        segs = url.split('/')
-                        organization_name = segs[2].split('.')[0]
-                        project_name = segs[3]
-                        repository_name = segs[5]
-                # We don't need to push to it as it is all currently there
-                self.organization_name = organization_name
-                self.project_name = project_name
-                self.repository_name = repository_name
-            else:
-                self.logger.critical("We don't support any other repositories except for azure repos. We cannot setup a build with these repositories.")  # pylint: disable=line-too-long
-                exit(1)
+                # default is to try and use the existing azure repo
+                repository_type = self.find_type_repository()
+                self.logger.info("We have detected that you have a %s type of repository", repository_type)
+                if repository_type == 'azure repos':
+                    # Figure out what the repository information is for their current azure repos account
+                    lines = (check_output('git remote show origin'.split())).decode('utf-8').split('\n')
+                    for line in lines:
+                        if re.search('Push', line):
+                            m = re.search('http.*', line)
+                            url = m.group(0)
+                            segs = url.split('/')
+                            organization_name = segs[2].split('.')[0]
+                            project_name = segs[3]
+                            repository_name = segs[5]
+                    # We don't need to push to it as it is all currently there
+                    self.organization_name = organization_name
+                    self.project_name = project_name
+                    self.repository_name = repository_name
+                else:
+                    self.logger.critical("We don't support any other repositories except for azure repos. We cannot setup a build with these repositories.")  # pylint: disable=line-too-long
+                    exit(1)
 
     def process_git_doesnt_exist(self):
         # check if we need to make a repository

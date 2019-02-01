@@ -390,6 +390,7 @@ def load_arguments(self, _):
         c.argument('functionapp_name', help="Name of the Azure Function App that you want to use", required=False)
         c.argument('organization_name', help="Name of the Azure DevOps organization that you want to use", required=False)
         c.argument('project_name', help="Name of the Azure DevOps project that you want to use", required=False)
+        c.argument('github_pat', help="Your github personal access token. Only use if you are creating a build from a local git that references a github repository. WARNING: this will push to the branch you are on and create a CI to the functionapp.", required=False)
         c.argument('overwrite_yaml', help="If you have an existing yaml, should it be overwritten?", arg_type=get_three_state_flag(return_label=True), required=False)
         c.argument('use_local_settings', help="Use your local settings in your functionapp settings?", arg_type=get_three_state_flag(return_label=True), required=False)
         c.argument('local_git', help="If you want have a local git repository in this folder, what should we do? Adding a remote will preserve your local repository and use a remote to reference the build repository. "
