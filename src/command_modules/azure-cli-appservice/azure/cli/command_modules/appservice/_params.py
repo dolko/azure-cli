@@ -386,12 +386,12 @@ def load_arguments(self, _):
         c.argument('number_of_workers', help='The number of workers for the app service plan.')
         c.argument('tags', arg_type=tags_type)
 
-    with self.argument_context('functionapp devops-build') as c:
+    with self.argument_context('functionapp devops-build create') as c:
         c.argument('functionapp_name', help="Name of the Azure Function App that you want to use", required=False)
         c.argument('organization_name', help="Name of the Azure DevOps organization that you want to use", required=False)
         c.argument('project_name', help="Name of the Azure DevOps project that you want to use", required=False)
-        c.argument('overwrite_yaml', help="If you have an existing yaml, should it be overwritten?", choices=['true', 'false'], required=False)
-        c.argument('use_local_settings', help="Use your local settings in your functionapp settings?", choices=['true', 'false'], required=False)
+        c.argument('overwrite_yaml', help="If you have an existing yaml, should it be overwritten?", arg_type=get_three_state_flag(return_label=True), required=False)
+        c.argument('use_local_settings', help="Use your local settings in your functionapp settings?", arg_type=get_three_state_flag(return_label=True), required=False)
         c.argument('local_git', help="If you want have a local git repository in this folder, what should we do? Adding a remote will preserve your local repository and use a remote to reference the build repository. "
                                      "Adding a new repository will remove your local git and create a new repostiory erase your current repository and create a new one. Use existing will attempt to use your local repository if it is an azure repository"
                                      " otherwise it will fail", arg_type=get_enum_type(EXISTING_GIT_OPTIONS), required=False)

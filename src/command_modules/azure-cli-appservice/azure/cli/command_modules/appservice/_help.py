@@ -1056,6 +1056,11 @@ helps['functionapp plan create'] = """
 """
 
 helps['functionapp devops-build'] = """
+    type: group
+    short-summary: Functionapp specific integration with azure devops builds
+"""
+
+helps['functionapp devops-build create'] = """
     type: command
     short-summary: Create an Azure Devops build pipeline for a function app.
 """
