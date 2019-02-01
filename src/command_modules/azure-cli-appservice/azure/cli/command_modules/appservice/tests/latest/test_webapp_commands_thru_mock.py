@@ -14,7 +14,6 @@ from azure.mgmt.web.models import (SourceControl, HostNameBinding, Site, SiteCon
 from azure.mgmt.web import WebSiteManagementClient
 from azure.cli.core.adal_authentication import AdalAuthentication
 from knack.util import CLIError
-import knack
 from azure.cli.command_modules.appservice.custom import (set_deployment_user,
                                                          update_git_token, add_hostname,
                                                          update_site_configs,
@@ -32,7 +31,6 @@ from azure.cli.command_modules.appservice.custom import (set_deployment_user,
                                                          restore_deleted_webapp,
                                                          list_snapshots,
                                                          restore_snapshot)
-from azure.cli.command_modules.appservice.azure_devops_build_iteractive import AzureDevopsBuildInteractive
 # pylint: disable=line-too-long
 from vsts_cd_manager.continuous_delivery_manager import ContinuousDeliveryResult
 
