@@ -2405,4 +2405,4 @@ def create_devops_build(cmd, functionapp_name=None, organization_name=None, proj
                                                                  organization_name, project_name,
                                                                  overwrite_yaml, use_local_settings,
                                                                  local_git)
-    azure_devops_build_interactive.interactive_azure_devops_build()
+    return azure_devops_build_interactive.interactive_azure_devops_build()

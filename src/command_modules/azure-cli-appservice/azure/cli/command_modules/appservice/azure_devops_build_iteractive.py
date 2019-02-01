@@ -70,6 +70,8 @@ class AzureDevopsBuildInteractive(object):
         """Main interactive flow which is the only function that should be used outside of this
         class (the rest are helpers)
         """
+        self.pre_checks()
+
         self.process_functionapp()
         self.process_organization()
         self.process_project()
@@ -88,6 +90,27 @@ class AzureDevopsBuildInteractive(object):
 
         self.process_build()
         self.process_release()
+
+        return_dict = {}
+        return_dict['functionapp_name'] = self.functionapp_name
+        return_dict['storage_name'] = self.storage_name
+        return_dict['resource_group_name'] = self.resource_group_name
+        return_dict['functionapp_language'] = self.functionapp_language
+        return_dict['functionapp_type'] = self.functionapp_type
+        return_dict['organization_name'] = self.organization_name
+        return_dict['project_name'] = self.project_name
+        return_dict['repository_name'] = self.repository_name
+        return_dict['service_endpoint_name'] = self.service_endpoint_name
+        return_dict['build_definition_name'] = self.build_definition_name
+        return_dict['release_definition_name'] = self.release_definition_name
+
+        return return_dict
+
+
+    def pre_checks(self):
+        if not os.path.exists('host.json'):
+            self.logger.critical("FATAL: There is no host.json in the current directory. Functionapps must contain a host.json in their root.")  # pylint: disable=line-too-long
+            exit(1)
 
     def process_functionapp(self):
         """Helper to retrieve information about a functionapp"""
